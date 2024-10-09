@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
-          '/': (context) => const MyHomePage(title: '제목'),
+          '/': (context) => const MyHomePage(title: '아토스'),
         });
   }
 }
