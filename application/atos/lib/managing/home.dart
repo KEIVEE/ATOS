@@ -48,12 +48,13 @@ class HomeState extends State<HomePage> {
             child: IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          SettingPage(userName: widget.userName, id: widget.id),
-                    ));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: "/settiing"),
+                    builder: (context) =>
+                        SettingPage(userName: widget.userName, id: widget.id),
+                  ),
+                );
               },
             ),
           ),

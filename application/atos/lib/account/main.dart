@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:atos/account/login.dart';
 import 'package:atos/account/register.dart';
-import 'package:atos/practice/content.dart';
-import 'package:atos/managing/manage.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -22,7 +20,6 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const MyHomePage(title: '제목'),
-          '/manage': (context) => ManagePage(userName: '', id: ''), // 빈값으로 초기화
         });
   }
 }
@@ -53,11 +50,12 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 20),
             OutlinedButton(
               onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginPage(),
-                    ));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: "/login"),
+                    builder: (context) => const LoginPage(),
+                  ),
+                );
               },
               style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -67,30 +65,17 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 10),
             OutlinedButton(
               onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterPage(),
-                    ));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: "/register"),
+                    builder: (context) => const RegisterPage(),
+                  ),
+                );
               },
               style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0))),
               child: const Text('회원가입'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ContentPage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('연습하나'),
             ),
           ],
         ),

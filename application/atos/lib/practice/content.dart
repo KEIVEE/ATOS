@@ -33,12 +33,13 @@ class ContentState extends State<ContentPage> {
             const Text('문명 그래프'),
             OutlinedButton(
                 onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TryPage(userName: widget.userName, id: widget.id),
-                      ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: "/try"),
+                      builder: (context) =>
+                          TryPage(userName: widget.userName, id: widget.id),
+                    ),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(

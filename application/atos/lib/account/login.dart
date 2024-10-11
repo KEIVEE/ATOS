@@ -72,11 +72,13 @@ class LoginState extends State<LoginPage> {
             const SizedBox(height: 20),
             OutlinedButton(
               onPressed: () {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ManagePage(userName: id, id: id),
-                    ));
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: "/manage"),
+                    builder: (context) =>
+                        ManagePage(userName: userName, id: id),
+                  ),
+                );
               },
               style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(

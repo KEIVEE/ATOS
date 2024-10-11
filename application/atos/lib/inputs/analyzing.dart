@@ -30,25 +30,28 @@ class AnalyzingState extends State<AnalyzingPage> {
       if (mounted) {
         if (widget.previousPageName == 'TranslatedPage') {
           // 특정 페이지에서 왔을 경우 다른 처리
-          Navigator.pushReplacement(
-            context,
+          Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-                builder: (context) =>
-                    ShowPage(userName: widget.userName, id: widget.id)),
+              settings: const RouteSettings(name: "/show"),
+              builder: (context) =>
+                  ShowPage(userName: widget.userName, id: widget.id),
+            ),
           );
         } else if (widget.previousPageName == 'TryPage') {
-          Navigator.pushReplacement(
-            context,
+          Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-                builder: (context) =>
-                    TryResultPage(userName: widget.userName, id: widget.id)),
+              settings: const RouteSettings(name: "/tryresult"),
+              builder: (context) =>
+                  TryResultPage(userName: widget.userName, id: widget.id),
+            ),
           );
         } else if (widget.previousPageName == 'AddPage') {
-          Navigator.pushReplacement(
-            context,
+          Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-                builder: (context) =>
-                    TranslatedPage(userName: widget.userName, id: widget.id)),
+              settings: const RouteSettings(name: "/translated"),
+              builder: (context) =>
+                  TranslatedPage(userName: widget.userName, id: widget.id),
+            ),
           );
         }
       }

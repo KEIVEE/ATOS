@@ -39,15 +39,14 @@ class TryState extends State<TryPage> {
             OutlinedButton(
               onPressed: () {
                 // 아이콘을 눌렀을 때 AnalyzingPage로 5초 동안 이동
-                Navigator.push(
-                  context,
+                Navigator.of(context).push(
                   MaterialPageRoute(
+                    settings: const RouteSettings(name: "/analyzing"),
                     builder: (context) => AnalyzingPage(
-                      duration: const Duration(seconds: 5),
-                      userName: widget.userName,
-                      id: widget.id,
-                      previousPageName: 'TryPage',
-                    ),
+                        duration: const Duration(seconds: 3),
+                        userName: widget.userName,
+                        id: widget.id,
+                        previousPageName: 'TryPage'),
                   ),
                 );
               },

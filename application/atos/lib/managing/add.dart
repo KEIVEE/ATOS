@@ -24,6 +24,7 @@ class AddState extends State<AddPage> {
           children: <Widget>[
             const Text('텍스트를 입력해주세요.'),
             TextField(
+                maxLines: 10,
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(0)),
@@ -32,8 +33,9 @@ class AddState extends State<AddPage> {
                       ),
                     ),
                     constraints: BoxConstraints(
-                      maxHeight: 150.0,
+                      maxHeight: 250.0,
                       maxWidth: 350.0,
+                      minHeight: 250,
                     )),
                 onChanged: (text) {
                   inputText = text;
@@ -46,16 +48,16 @@ class AddState extends State<AddPage> {
                 child: const Text('불러오기')),
             OutlinedButton(
                 onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AnalyzingPage(
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: "/analyzing"),
+                      builder: (context) => AnalyzingPage(
+                          duration: const Duration(seconds: 3),
                           userName: widget.userName,
                           id: widget.id,
-                          previousPageName: 'AddPage',
-                          duration: const Duration(seconds: 3),
-                        ),
-                      ));
+                          previousPageName: 'AddPage'),
+                    ),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(

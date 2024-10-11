@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:atos/practice/content.dart';
 
 class PracticePage extends StatefulWidget {
   const PracticePage({super.key, required this.userName, required this.id});
@@ -27,6 +28,21 @@ class PracticeState extends State<PracticePage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('저장한 리스트?')),
+            OutlinedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: "/content"),
+                    builder: (context) =>
+                        ContentPage(userName: widget.userName, id: widget.id),
+                  ),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0))),
+              child: const Text('연습하나'),
+            ),
           ],
         ),
       ),

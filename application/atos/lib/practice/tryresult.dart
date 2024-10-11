@@ -41,13 +41,21 @@ class TryResultState extends State<TryResultPage> {
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('내 발음 듣기')),
             OutlinedButton(
-                onPressed: null,
+                onPressed: () {
+                  Navigator.popUntil(context, (route) {
+                    return route.settings.name == '/manage'; // HomePage의 경로
+                  });
+                },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('홈으로 가기')),
             OutlinedButton(
-                onPressed: null,
+                onPressed: () {
+                  Navigator.popUntil(context, (route) {
+                    return route.settings.name == '/content'; // HomePage의 경로
+                  });
+                },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
