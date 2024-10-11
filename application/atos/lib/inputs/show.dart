@@ -42,7 +42,11 @@ class ShowState extends State<ShowPage> {
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('내 발음 듣기')),
             OutlinedButton(
-                onPressed: null,
+                onPressed: () {
+                  Navigator.popUntil(context, (route) {
+                    return route.settings.name == '/manage'; // HomePage의 경로
+                  });
+                },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),

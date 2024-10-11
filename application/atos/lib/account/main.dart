@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:atos/account/login.dart';
 import 'package:atos/account/register.dart';
-import 'package:atos/account/setting.dart';
-import 'package:atos/inputs/analyzing.dart';
-import 'package:atos/inputs/show.dart';
-import 'package:atos/inputs/translated.dart';
-import 'package:atos/managing/manage.dart';
 import 'package:atos/practice/content.dart';
-import 'package:atos/practice/try.dart';
-import 'package:atos/practice/tryresult.dart';
+import 'package:atos/managing/manage.dart';
 
 void main() async {
   runApp(const MyApp());
@@ -28,6 +22,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const MyHomePage(title: '제목'),
+          '/manage': (context) => ManagePage(userName: '', id: ''), // 빈값으로 초기화
         });
   }
 }
@@ -89,75 +84,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          SettingPage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('세팅'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AnalyzingPage(),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('분석중'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ShowPage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('입력결과'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          TranslatedPage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('변환결과'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ManagePage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('매니지'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
                           ContentPage(userName: userName, id: id),
                     ));
               },
@@ -165,33 +91,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0))),
               child: const Text('연습하나'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TryPage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('다시시도'),
-            ),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          TryResultPage(userName: userName, id: id),
-                    ));
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('다시시도결과'),
             ),
           ],
         ),

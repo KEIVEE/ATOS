@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:atos/inputs/analyzing.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key, required this.userName, required this.id});
@@ -44,7 +45,18 @@ class AddState extends State<AddPage> {
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('불러오기')),
             OutlinedButton(
-                onPressed: null,
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AnalyzingPage(
+                          userName: widget.userName,
+                          id: widget.id,
+                          previousPageName: 'AddPage',
+                          duration: const Duration(seconds: 3),
+                        ),
+                      ));
+                },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),

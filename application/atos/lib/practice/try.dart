@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:atos/inputs/analyzing.dart';
 
 // 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 
@@ -35,6 +36,26 @@ class TryState extends State<TryPage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('표준어 듣기')),
+            OutlinedButton(
+              onPressed: () {
+                // 아이콘을 눌렀을 때 AnalyzingPage로 5초 동안 이동
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AnalyzingPage(
+                      duration: const Duration(seconds: 5),
+                      userName: widget.userName,
+                      id: widget.id,
+                      previousPageName: 'TryPage',
+                    ),
+                  ),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0))),
+              child: const Text('분석 시작'),
+            ),
             const IconButton(
               onPressed: null,
               icon: Icon(Icons.circle, color: Colors.red),

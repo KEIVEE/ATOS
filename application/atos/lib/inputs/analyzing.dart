@@ -1,9 +1,21 @@
+import 'package:atos/inputs/translated.dart';
 import 'package:flutter/material.dart';
-
-// 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
+import 'package:atos/inputs/show.dart';
+import 'package:atos/practice/tryresult.dart';
 
 class AnalyzingPage extends StatefulWidget {
-  const AnalyzingPage({super.key});
+  const AnalyzingPage({
+    super.key,
+    required this.duration,
+    required this.userName,
+    required this.id,
+    required this.previousPageName,
+  });
+
+  final Duration duration;
+  final String userName;
+  final String id;
+  final String previousPageName;
 
   @override
   State<AnalyzingPage> createState() => AnalyzingState();
@@ -11,17 +23,59 @@ class AnalyzingPage extends StatefulWidget {
 
 class AnalyzingState extends State<AnalyzingPage> {
   @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(widget.duration, () {
+      if (mounted) {
+        if (widget.previousPageName == 'TranslatedPage') {
+          // 특정 페이지에서 왔을 경우 다른 처리
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    ShowPage(userName: widget.userName, id: widget.id)),
+          );
+        } else if (widget.previousPageName == 'TryPage') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    TryResultPage(userName: widget.userName, id: widget.id)),
+          );
+        } else if (widget.previousPageName == 'AddPage') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    TranslatedPage(userName: widget.userName, id: widget.id)),
+          );
+        }
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Text('분석중이에요'),
-            CircularProgressIndicator(
-              strokeWidth: 40,
-            ),
-          ],
+    return WillPopScope(
+      onWillPop: () async {
+        return false; // 뒤로 가기 동작 비활성화
+      },
+      child: const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text('분석중이에요'),
+              SizedBox(
+                width: 100, // 원하는 너비
+                height: 100, // 원하는 높이
+                child: CircularProgressIndicator(
+                  strokeWidth: 10, // 두께 조절
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

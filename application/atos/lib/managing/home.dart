@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:atos/account/setting.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.userName, required this.id});
@@ -47,7 +48,12 @@ class HomeState extends State<HomePage> {
             child: IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
-                // Settings button action
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          SettingPage(userName: widget.userName, id: widget.id),
+                    ));
               },
             ),
           ),

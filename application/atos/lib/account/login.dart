@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:atos/managing/manage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -70,7 +71,13 @@ class LoginState extends State<LoginPage> {
             ),
             const SizedBox(height: 20),
             OutlinedButton(
-              onPressed: null,
+              onPressed: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ManagePage(userName: id, id: id),
+                    ));
+              },
               style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0))),
