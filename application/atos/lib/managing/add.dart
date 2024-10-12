@@ -22,24 +22,25 @@ class AddState extends State<AddPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const Text('텍스트를 입력해주세요.'),
+            const SizedBox(height: 5),
             TextField(
-                maxLines: 10,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(0)),
-                      borderSide: BorderSide(
-                        color: Colors.grey,
-                      ),
+              maxLines: 20,
+              decoration: const InputDecoration(
+                  labelText: '텍스트를 입력해주세요.',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(0)),
+                    borderSide: BorderSide(
+                      color: Colors.grey,
                     ),
-                    constraints: BoxConstraints(
-                      maxHeight: 250.0,
-                      maxWidth: 350.0,
-                      minHeight: 250,
-                    )),
-                onChanged: (text) {
-                  inputText = text;
-                }),
+                  ),
+                  constraints: BoxConstraints(
+                    maxHeight: 250.0,
+                    maxWidth: 350.0,
+                  )),
+              onChanged: (text) {
+                inputText = text;
+              },
+            ),
             OutlinedButton(
                 onPressed: null,
                 style: OutlinedButton.styleFrom(
