@@ -21,6 +21,8 @@ app = FastAPI()
 bucket = storage.bucket('atos-cd1.appspot.com')
 audio_blob_name = 'test_audio/'
 
+# tt.gpt_test('test text')
+
 # 텍스트 디비 변경 시 실행
 def os_text(doc_snapshot, changes, read_time):
     global init_call_os_text
@@ -33,9 +35,11 @@ def os_text(doc_snapshot, changes, read_time):
         if(change.type.name == 'ADDED') :
             print("text added")
             toTranslate = change.document.to_dict() # 바뀐 텍스트 가져오기
-            tt.gpt_test(toTranslate.get('text'))
+            #tt.gpt_test(toTranslate.get('text'))
             translated_text = tt.gpt_translate(toTranslate.get('text'))
+            text_dto = {'text' : translated_text}
             print("번역된 텍스트 : " + translated_text)
+            translatedText_db.add(text_dto)
             
 
         ## gpt api로 번역하고 디비에 저장하기
@@ -64,6 +68,7 @@ def os_audio(doc_snapshot, changes, read_time):
 # 디비
 toTranslateText_db = db.collection('toTranslateText')
 userAudio_db = db.collection('userAudio')
+translatedText_db = db.collection('translatedText')
 
 # 디비 리스너 (변화 감지)
 text_watch = toTranslateText_db.on_snapshot(os_text)

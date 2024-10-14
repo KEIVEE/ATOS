@@ -13,7 +13,7 @@ def gpt_translate (text):
     model="gpt-4o",
     max_tokens=100,
     messages=[
-        { "role" : "system", "content" : "제주도 사투리를 표준어로 번역해줘. 번역한 텍스트만을 답해줘."},
+        { "role" : "system", "content" : "경상도 사투리를 표준어로 번역해줘. 번역한 텍스트만을 답해줘."},
         { "role" : "user", "content" : text}
     ])
 
