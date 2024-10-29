@@ -57,6 +57,12 @@ class TranslatedState extends State<TranslatedPage> {
                       borderRadius: BorderRadius.circular(10.0))),
               child: const Text('분석 시작'),
             ),
+            OutlinedButton(
+                onPressed: null,
+                style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0))),
+                child: const Text('표준어 듣기')),
             const SizedBox(height: 20),
             const IconButton(
               onPressed: null,

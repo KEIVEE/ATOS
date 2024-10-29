@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "44855878138",
+    "firebase_url": "https://atos-cd1-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "atos-cd1",
+    "storage_bucket": "atos-cd1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44855878138:android:ad22781b07d86e9299c443",
+        "android_client_info": {
+          "package_name": "com.atos.a"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwhP5eNMKgMhiDP0uLSYs-YyH7cw1zN6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44855878138:android:547f5a39fa218e0b99c443",
+        "android_client_info": {
+          "package_name": "com.example.atos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwhP5eNMKgMhiDP0uLSYs-YyH7cw1zN6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

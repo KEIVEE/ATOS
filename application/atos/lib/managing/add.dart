@@ -64,7 +64,7 @@ class AddState extends State<AddPage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('확인')),
-            const Text('양옆으로 바꿀 거임'),
+            const Text('양옆으로 바꿀 거임\n그리고 테마선택'),
           ],
         ),
       ),
