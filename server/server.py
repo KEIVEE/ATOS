@@ -1,8 +1,10 @@
 import server.server_init as server_init
 import server.text_translate as tt
+import server.gctts as tts
+
+import tempfile
 
 import firebase_admin
-from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import storage
 
@@ -35,13 +37,21 @@ def os_text(doc_snapshot, changes, read_time):
         if(change.type.name == 'ADDED') :
             print("text added")
             toTranslate = change.document.to_dict() # 바뀐 텍스트 가져오기
-            #tt.gpt_test(toTranslate.get('text'))
-            translated_text = tt.gpt_translate(toTranslate.get('text'))
+
+            translated_text = tt.gpt_test(toTranslate.get('text')) # gpt api 무한루프 돌 수도 있으니까 테스트로 일단 실행
+            #translated_text = tt.gpt_translate(toTranslate.get('text'))
+
             text_dto = {'text' : translated_text}
             print("번역된 텍스트 : " + translated_text)
-            translatedText_db.add(text_dto)
-            
 
+            audio = tts.getTTS(translated_text)
+            blob = bucket.blob("gcTTS/"+change.document.id+".wav")
+            blob.upload_from_string(audio, content_type="audio/wav")
+            print("번역 텍스트 TTS 오디오 파일 저장")
+
+            translatedText_db.add(text_dto)
+
+            
         ## gpt api로 번역하고 디비에 저장하기
         ## 번역한 text tts 로 음성파일 디비에 저장하기
 
@@ -61,6 +71,11 @@ def os_audio(doc_snapshot, changes, read_time):
             audio_data = blob.download_as_bytes()
             print("음성 파일이 바이트 변수에 성공적으로 저장되었습니다.")
             print(f"바이트 데이터 길이: {len(audio_data)}")
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav_file:
+                temp_wav_file.write(audio_data)
+                temp_wav_file_path = temp_wav_file.name # 임시 파일 경로
+                print("음성 temp파일 저장 완료")
 
 ## 음성파일의 경우 storage 에 저장되므로 직접적인 변화 감지가 불가능
 ## 따라서 firestore에 음성파일의 제목만을 저장하는 텍스트 디비를 만들고 이 디비의 변화를 감지
