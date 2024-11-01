@@ -1,7 +1,8 @@
 import firebase_admin
 from firebase_admin import credentials
+from server.settings import FB_KEY
 
-key_path = '/Users/jichan/Desktop/대학/3-2/캡스톤/key/firebase_key/atos-cd1-firebase-adminsdk-5vlmg-b99ed3548b.json'
+key_path = FB_KEY
 cred = credentials.Certificate(key_path)
 
 def init_server():

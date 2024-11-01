@@ -1,11 +1,12 @@
 import google.cloud.texttospeech as texttospeech
+from server.settings import GC_TTS_KEY
 
-def getTTS() :
-    key_path = '/Users/jichan/Desktop/대학/3-2/캡스톤/key/gc_key/cd24-2-59737e481a51.json'
+def getTTS(tts) :
+    key_path = GC_TTS_KEY
     client = texttospeech.TextToSpeechClient.from_service_account_file(key_path)
 
     # TTS 요청을 위한 텍스트 입력 설정
-    text_input = texttospeech.SynthesisInput(text="안녕하세요! 구글 클라우드 TTS를 사용하여 텍스트를 음성으로 변환하고 있습니다.")
+    text_input = texttospeech.SynthesisInput(text=tts)
 
     # 음성 구성 설정 (언어 코드와 목소리 유형 지정)
     voice = texttospeech.VoiceSelectionParams(
@@ -16,7 +17,7 @@ def getTTS() :
 
     # 오디오 설정 (출력 형식을 MP3로 지정)
     audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3,
+        audio_encoding=texttospeech.AudioEncoding.LINEAR16,
         speaking_rate=1.2
     )
 
@@ -28,10 +29,6 @@ def getTTS() :
     )
 
     return response.audio_content
-
-if __name__ == "__main__":
-    getTTS()
-
 
 # # 결과 저장
 # with open("output.mp3", "wb") as out:
