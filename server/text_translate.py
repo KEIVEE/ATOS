@@ -11,7 +11,6 @@ def gpt_test (text):
 def gpt_translate (text):
     region = text[0:3]
     request = text[3:]
-    print(region+"\n"+request)
     client = OpenAI(api_key = gpt_key)
     completion = client.chat.completions.create(
     model="gpt-4o",
