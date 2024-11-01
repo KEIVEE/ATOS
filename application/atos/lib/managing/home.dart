@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:atos/account/setting.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.userName, required this.id});
@@ -12,6 +13,7 @@ class HomePage extends StatefulWidget {
 }
 
 class HomeState extends State<HomePage> {
+  FirebaseAuth auth = FirebaseAuth.instance;
   var connected = false;
   var connectTried = false;
 
@@ -28,6 +30,9 @@ class HomeState extends State<HomePage> {
                 const SizedBox(height: 50), // Add spacing to avoid overlap
                 const Text('오늘의 추천 문장:'),
                 const Text('사투리 교정'),
+                // Safely displaying the user's email
+                //Text(auth.currentUser?.photoURL ?? '지역이 없습니다.'),
+                //Text(widget.id),
                 OutlinedButton(
                   onPressed: null,
                   style: OutlinedButton.styleFrom(

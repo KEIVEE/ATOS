@@ -39,8 +39,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var userName = '디버그';
-  var id = '디버그';
   @override
   Widget build(BuildContext context) {
     return Scaffold(

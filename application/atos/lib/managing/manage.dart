@@ -2,6 +2,7 @@ import 'package:atos/managing/add.dart';
 import 'package:atos/managing/practice.dart';
 import 'package:flutter/material.dart';
 import 'package:atos/managing/home.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 
 // 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 
@@ -18,6 +19,7 @@ class ManageState extends State<ManagePage>
     with SingleTickerProviderStateMixin {
   late TabController controller;
   int selectedIndex = 0;
+  //var auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -63,10 +65,10 @@ class ManageState extends State<ManagePage>
         body: TabBarView(
             physics: const NeverScrollableScrollPhysics(),
             controller: controller,
-            children: const [
-              HomePage(userName: '디버그', id: '디버그'),
-              AddPage(userName: '디버그', id: '디버그'),
-              PracticePage(userName: '디버그', id: '디버그'),
+            children: [
+              HomePage(userName: widget.userName, id: widget.id),
+              AddPage(userName: widget.userName, id: widget.id),
+              PracticePage(userName: widget.userName, id: widget.id),
             ]));
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,10 +16,82 @@ class RegisterState extends State<RegisterPage> {
   var password = "";
   var passwordCheck = "";
   var correction = true;
-  var testUrl = "";
-  String idCheckMessage = ""; // ID 중복 확인 메시지 저장 변수
+  String idCheckMessage = ""; // ID availability message
+  String registerCheckMessage = "";
   var idChecked = false;
   var registerTried = false;
+  final regions = ['경상도', '전라도', '충청도', '강원도', '제주도'];
+
+  var region = "";
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // ID check function
+  Future<void> checkIdAvailability() async {
+    if (id.isEmpty) {
+      setState(() {
+        idCheckMessage = "아이디를 입력해주세요.";
+      });
+      return;
+    }
+
+    try {
+      final signInMethods =
+          await _auth.fetchSignInMethodsForEmail('$id@example.com');
+      setState(() {
+        idChecked = signInMethods.isEmpty;
+        idCheckMessage = idChecked ? '사용할 수 있는 id입니다.' : '사용할 수 없는 id입니다.';
+      });
+    } catch (e) {
+      setState(() {
+        idCheckMessage = '사용할 수 있는 id입니다.';
+      });
+    }
+  }
+
+  Future<void> registerUser() async {
+    setState(() {
+      registerTried = true;
+    });
+
+    if (!correction || !idChecked || id.isEmpty || password.isEmpty) {
+      return;
+    }
+
+    // 비밀번호 길이 검사
+    if (password.length < 6) {
+      setState(() {
+        registerCheckMessage = '비밀번호는 6자 이상이어야 합니다.';
+      });
+      return;
+    }
+
+    try {
+      // Firebase Auth로 사용자 생성
+      await _auth.createUserWithEmailAndPassword(
+        email: '$id@example.com',
+        password: password,
+      );
+      _auth.currentUser?.updateDisplayName(nickname);
+      _auth.currentUser?.updatePhotoURL(region);
+
+      if (mounted) {
+        Navigator.pop(context); // 성공적으로 회원가입이 완료되면 뒤로 이동
+      }
+    } catch (e) {
+      setState(() {
+        registerCheckMessage = '회원가입 중 오류가 발생했습니다: ${e.toString()}';
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      region = regions[0];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +99,11 @@ class RegisterState extends State<RegisterPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.arrow_back)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back),
+        ),
         backgroundColor: Colors.white,
         title: Text(widget.loginTitle),
       ),
@@ -37,70 +111,55 @@ class RegisterState extends State<RegisterPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // Nickname field
             TextField(
               decoration: const InputDecoration(
-                  labelText: '닉네임',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(0)),
-                    borderSide: BorderSide(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  constraints: BoxConstraints(
-                    maxHeight: 50.0,
-                    maxWidth: 250.0,
-                  )),
+                labelText: '닉네임',
+                border: OutlineInputBorder(),
+                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
+              ),
               onChanged: (text) {
                 nickname = text;
               },
             ),
+
+            // ID field and check button
             TextField(
               decoration: const InputDecoration(
-                  labelText: 'ID',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(0)),
-                    borderSide: BorderSide(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  constraints: BoxConstraints(
-                    maxHeight: 50.0,
-                    maxWidth: 250.0,
-                  )),
+                labelText: 'ID',
+                border: OutlineInputBorder(),
+                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
+              ),
               onChanged: (text) {
                 id = text;
-                testUrl = 'http://211.201.203.110:9000/api/user/check/$id';
               },
             ),
             OutlinedButton(
-              onPressed: null,
+              onPressed: checkIdAvailability,
               style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
               child: const Text('아이디 확인'),
             ),
             Text(
               idCheckMessage,
               style: TextStyle(
-                color: idCheckMessage == '사용할 수 없는 id입니다.'
-                    ? Colors.red
-                    : Colors.green,
+                color: idCheckMessage == '사용할 수 있는 id입니다.'
+                    ? Colors.green
+                    : Colors.red,
               ),
             ),
+
+            // Password fields
             TextField(
               obscureText: true,
               decoration: const InputDecoration(
-                  labelText: '비밀번호',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(0)),
-                    borderSide: BorderSide(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  constraints: BoxConstraints(
-                    maxHeight: 50.0,
-                    maxWidth: 250.0,
-                  )),
+                labelText: '비밀번호',
+                border: OutlineInputBorder(),
+                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
+              ),
               onChanged: (text) {
                 password = text;
               },
@@ -108,17 +167,10 @@ class RegisterState extends State<RegisterPage> {
             TextField(
               obscureText: true,
               decoration: const InputDecoration(
-                  labelText: '비밀번호 확인',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(0)),
-                    borderSide: BorderSide(
-                      color: Colors.grey,
-                    ),
-                  ),
-                  constraints: BoxConstraints(
-                    maxHeight: 50.0,
-                    maxWidth: 250.0,
-                  )),
+                labelText: '비밀번호 확인',
+                border: OutlineInputBorder(),
+                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
+              ),
               onChanged: (text) {
                 setState(() {
                   passwordCheck = text;
@@ -131,20 +183,40 @@ class RegisterState extends State<RegisterPage> {
                 '비밀번호가 일치하지 않습니다.',
                 style: TextStyle(color: Colors.red),
               ),
+
             const SizedBox(height: 20),
+
+            DropdownButton(
+                value: region,
+                items: regions
+                    .map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    region = value!;
+                  });
+                }),
+
+            // Register button
             OutlinedButton(
-              onPressed: null,
+              onPressed: registerUser,
               style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
               child: const Text('가입하기'),
             ),
-            if (!correction && registerTried)
-              const Text(
-                '비밀번호가 일치하지 않습니다.',
-                style: TextStyle(color: Colors.red),
+
+            Text(
+              registerCheckMessage,
+              style: TextStyle(
+                color: Colors.red,
               ),
-            const Text('지역 선택하는 부분')
+            ),
           ],
         ),
       ),
