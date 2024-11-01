@@ -4,8 +4,9 @@ from server.settings import GPT_KEY
 gpt_key = GPT_KEY
 
 def gpt_test (text):
-    print(f"gpt api text : {text}")
-    print(f"key : {GPT_KEY}")
+    #print(f"gpt api text : {text}")
+    #print(f"key : {GPT_KEY}")
+    return text
 
 def gpt_translate (text):
     client = OpenAI(api_key = gpt_key)
