@@ -37,6 +37,12 @@ class TryState extends State<TryPage> {
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('표준어 듣기')),
             OutlinedButton(
+                onPressed: null,
+                style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0))),
+                child: const Text('다시 녹음')),
+            OutlinedButton(
               onPressed: () {
                 // 아이콘을 눌렀을 때 AnalyzingPage로 5초 동안 이동
                 Navigator.of(context).push(

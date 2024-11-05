@@ -45,12 +45,7 @@ class AddState extends State<AddPage> {
                 inputText = text;
               },
             ),
-            OutlinedButton(
-                onPressed: null,
-                style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0))),
-                child: const Text('불러오기')),
+            const Text('바로 연습할건지, 아니면 번역을 거칠 건지'),
             OutlinedButton(
                 onPressed: () async {
                   if (inputText.isEmpty) {

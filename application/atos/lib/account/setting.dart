@@ -38,7 +38,7 @@ class SettingState extends State<SettingPage> {
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
-                child: const Text('회원정보수정?')),
+                child: const Text('닉네임 수정')),
           ],
         ),
       ),

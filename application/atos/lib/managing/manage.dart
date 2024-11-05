@@ -44,11 +44,8 @@ class ManageState extends State<ManagePage>
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.arrow_back)),
+          centerTitle: true,
+          automaticallyImplyLeading: false,
           backgroundColor: Colors.white,
           title: Text('안녕하세요, ${widget.userName}님'),
         ),
