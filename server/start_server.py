@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from io import BytesIO
 
 from server.DTO.set_user_dto import UserDTO
+from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 
 init_call_os_text = True  # 처음에는 True로 설정
 init_call_os_audio = True 
@@ -37,7 +38,7 @@ userData_db = db.collection('userData')
 def read_root():
     return 'Server for ATOS project'
 
-@app.post('/set-user', response_model=UserDTO)
+@app.post('/set-user')
 async def set_user(request: UserDTO):
     try:
         user_save_dto = {
@@ -49,28 +50,24 @@ async def set_user(request: UserDTO):
         user_ref = userData_db.document()
         user_ref.set(user_save_dto)
 
-        return request  
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 
-@app.post('/translate-text') 
-async def translate_text(request: Request):
+@app.post('/translate-text',response_model=TransTextReDTO) 
+async def translate_text(request: TransTextDTO):
     try:
-        body = request.json()
-
         text_save_dto = {
-            'text': body.get('text'),
-            'user_id': body.get('user_id'),
-            'region': body.get('region')
+            'text': request.text,
+            'user_id': request.user_id,
+            'region': request.region
         }
         text_ref = toTranslateText_db.document()
         text_ref.set(text_save_dto)
 
-        translated_text = tt.gpt_translate(body.get('region'),body.get('text'))
+        translated_text = tt.gpt_translate(request.region,request.text)
         trans_text_save_dto = {
-            'user_id': body.get('user_id'),
+            'user_id': request.user_id,
             'text': translated_text
         }
         translated_text_ref = translatedText_db.document()
@@ -82,13 +79,13 @@ async def translate_text(request: Request):
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
         blob.upload_from_string(audio, content_type="audio/wav")
 
-        response_dto = {
-            'text_id' : text_ref.id,
-            'text_data' : text_save_dto,
-            'translated_text_id' : translated_text_ref.id,
-            'translated_text_data' : trans_text_save_dto,
-            'audio_title' : audio_db_collection + translated_text_ref.id + audio_type
-        }
+        response_dto = response_dto = TransTextReDTO(
+            text_id=text_ref.id,
+            text_data=text_save_dto,
+            translated_text_id=translated_text_ref.id,
+            translated_text_data=trans_text_save_dto,
+            audio_title=audio_db_collection + translated_text_ref.id + audio_type
+        )
 
         return response_dto
 
