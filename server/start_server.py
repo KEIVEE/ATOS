@@ -12,6 +12,8 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 
+from server.DTO.set_user_dto import UserDTO
+
 init_call_os_text = True  # 처음에는 True로 설정
 init_call_os_audio = True 
 
@@ -35,19 +37,19 @@ userData_db = db.collection('userData')
 def read_root():
     return 'Server for ATOS project'
 
-@app.post('/set-user')
-async def set_user(request: Request):
+@app.post('/set-user', response_model=UserDTO)
+async def set_user(request: UserDTO):
     try:
-        body = await request.json()
-
         user_save_dto = {
-            'user_id' : body.get('user_id"'),
-            'region' : body.get('region'),
-            'sex' : body.get('sex')
+            'user_id': request.user_id,
+            'region': request.region,
+            'sex': request.sex
         }
 
         user_ref = userData_db.document()
         user_ref.set(user_save_dto)
+
+        return request  
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
@@ -56,7 +58,7 @@ async def set_user(request: Request):
 @app.post('/translate-text') 
 async def translate_text(request: Request):
     try:
-        body = await request.json()
+        body = request.json()
 
         text_save_dto = {
             'text': body.get('text'),
@@ -96,7 +98,7 @@ async def translate_text(request: Request):
 @app.post("/get-tts")
 async def get_tts(request: Request) :
     try:
-        body = await request.json()
+        body = request.json()
 
         translated_text = body.get('text')
         trans_text_save_dto = {
