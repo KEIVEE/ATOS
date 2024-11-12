@@ -1,0 +1,5 @@
+pip install google-cloud-texttospeech
+pip install firebase-admin
+pip install python-dotenv
+pip install "fastapi[all]"
+pip install openai
