@@ -8,7 +8,9 @@ import firebase_admin
 from firebase_admin import firestore
 from firebase_admin import storage
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import StreamingResponse
+from io import BytesIO
 
 init_call_os_text = True  # 처음에는 True로 설정
 init_call_os_audio = True 
@@ -86,12 +88,105 @@ userAudio_db = db.collection('userAudio')
 translatedText_db = db.collection('translatedText')
 
 # 디비 리스너 (변화 감지)
-text_watch = toTranslateText_db.on_snapshot(os_text)
-audio_watch = userAudio_db.on_snapshot(os_audio)
+# text_watch = toTranslateText_db.on_snapshot(os_text)
+# audio_watch = userAudio_db.on_snapshot(os_audio)
 
-@app.get("/")
+@app.get('/')
 def read_root():
-    return "Server for ATOS project"
+    return 'Server for ATOS project'
+
+
+@app.post('/translate-text') 
+async def translate_text(request: Request):
+    try:
+        body = await request.json()
+
+        text_save_dto = {
+            'text': body.get('text'),
+            'user_id': body.get('user_id'),
+            'region': body.get('region')
+        }
+        text_ref = toTranslateText_db.document()
+        text_ref.set(text_save_dto)
+
+        translated_text = tt.gpt_translate(body.get('region'),body.get('text'))
+        trans_text_save_dto = {
+            'user_id': body.get('user_id'),
+            'text': translated_text
+        }
+        translated_text_ref = translatedText_db.document()
+        translated_text_ref.set(trans_text_save_dto)
+
+        audio_db_collection = 'gcTTS'
+        audio_type = '.wav'
+        audio = tts.getTTS(translated_text)
+        blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
+        blob.upload_from_string(audio, content_type="audio/wav")
+
+        response_dto = {
+            'text_id' : text_ref.id,
+            'text_data' : text_save_dto,
+            'translated_text_id' : translated_text_ref.id,
+            'translated_text_data' : trans_text_save_dto,
+            'audio_title' : audio_db_collection + translated_text_ref.id + audio_type
+        }
+
+        return response_dto
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.post("/get-tts")
+async def get_tts(request: Request) :
+    try:
+        body = await request.json()
+
+        translated_text = body.get('text')
+        trans_text_save_dto = {
+            'user_id': body.get('user_id'),
+            'text': translated_text
+        }
+        translated_text_ref = translatedText_db.document()
+        translated_text_ref.set(trans_text_save_dto)
+
+        audio_db_collection = 'gcTTS'
+        audio_type = '.wav'
+        audio = tts.getTTS(translated_text)
+        blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
+        blob.upload_from_string(audio, content_type="audio/wav")
+
+        audio_stream = BytesIO(audio)
+        audio_stream.seek(0)
+
+        return StreamingResponse(audio_stream, media_type="audio/wav")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-user-practice/{user_id}")
+async def get_user_practice(user_id : str) :
+    try:
+        query = translatedText_db.where("user_id", "==", user_id).stream()
+
+        translated_texts = []
+        
+        for doc in query:
+            translated_texts.append({**doc.to_dict(), 'id': doc.id})
+
+        if not translated_texts:
+            raise HTTPException(status_code=404, detail="사용자의 연습 데이터가 없습니다.")
+        
+        return {"translated_texts": translated_texts}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
+
+
+
+
+
+
 
 
 
