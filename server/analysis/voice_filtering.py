@@ -3,7 +3,7 @@ import parselmouth
 import scipy.io.wavfile as wav
 import numpy as np
 
-def process_and_save_filtered_audio(input_file_path, output_file_path = "server\filtered_audio", human_voice_range=(30, 255), extend_ms=50, silence_after_ms=150):
+def process_and_save_filtered_audio(input_file_path, output_file_path = "server/filtered_audio", human_voice_range=(30, 255), extend_ms=50, silence_after_ms=150):
     """
     입력 WAV 파일에서 인간 음역대만 필터링하여 결과를 반환하고, 새 파일로 저장하는 함수.
 

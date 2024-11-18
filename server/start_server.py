@@ -8,12 +8,17 @@ import firebase_admin
 from firebase_admin import firestore
 from firebase_admin import storage
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, File, UploadFile
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 
 from server.DTO.set_user_dto import UserDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
+
+from server.analysis.get_timestamp import extract_word_timestamps, load_models
+
+import os
+import shutil
 
 init_call_os_text = True  # 처음에는 True로 설정
 init_call_os_audio = True 
@@ -33,6 +38,10 @@ toTranslateText_db = db.collection('toTranslateText')
 userAudio_db = db.collection('userAudio')
 translatedText_db = db.collection('translatedText')
 userData_db = db.collection('userData')
+
+@app.on_event("startup")
+async def startup_event():
+    load_models()
 
 @app.get('/')
 def read_root():
@@ -134,6 +143,34 @@ async def get_user_practice(user_id : str) :
         
         return {"translated_texts": translated_texts}
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
+
+@app.post("/voice-analysis")
+async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...)):
+    try :
+        upload_dir = "server/filtered_audio"
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # user_voice 파일 저장
+        user_voice_path = os.path.join(upload_dir, user_voice.filename)
+        with open(user_voice_path, "wb") as buffer:
+            shutil.copyfileobj(user_voice.file, buffer)
+
+        # tts_voice 파일 저장
+        tts_voice_path = os.path.join(upload_dir, tts_voice.filename)
+        with open(tts_voice_path, "wb") as buffer:
+            shutil.copyfileobj(tts_voice.file, buffer)
+
+
+
+        os.remove(user_voice_path)
+        os.remove(tts_voice_path)
+
+        result = '성공'
+        return result
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
