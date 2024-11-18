@@ -41,10 +41,8 @@ dependencies:
   firebase_auth: 
   cloud_firestore: ^5.4.4
   path_provider: ^2.0.5
-  audioplayers: ^5.2.0
   permission_handler: ^11.0.1
   flutter_sound: ^9.2.13
-  http: 
   path:
 
 dev_dependencies:
