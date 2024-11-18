@@ -99,9 +99,9 @@ class SettingState extends State<SettingPage> {
                           labelText: '새 닉네임',
                         ),
                         onChanged: (text) {
-                          setState(() {
-                            newNickname = text; // 새로운 닉네임을 저장
-                          });
+                         
+                          newNickname = text; // 새로운 닉네임을 저장
+                          
                         },
                       ),
                       actions: <Widget>[
