@@ -19,7 +19,7 @@ def process_and_save_filtered_audio(input_file_path, output_file_path = "server/
         pitch_values (numpy.ndarray): 피치 값 배열.
         time_steps (numpy.ndarray): 시간 단계 배열.
     """
-    output_file_path += input_file_path
+    output_file_path = input_file_path
 
     # 1. WAV 파일 로드
     sampling_rate, data = wav.read(input_file_path)
