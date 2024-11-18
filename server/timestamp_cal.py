@@ -16,7 +16,7 @@ def ts_cal (text_ts, ori_text):
     for ts in text_ts:
         request += "단어 : " + ts['word'] + ", 시작 : " + ts['start'] + ", 끝 : " + ts['end'] + '\n'
 
-    request = "\"" + ori_text + "\" 가 원래 텍스트일 때 타임스탬프 결과야. " + request + "타임스탬프에 원래 텍스트와 다른 단어들과 띄어쓰기가 존재하는데 이것을 원래 텍스트와 일치하도록 바꾸고 타임스탬프로 만들어줘. 띄어쓰기로 단어를 구별하고 너 맘대로 단어를 구분하지마. 최종 결과를 json 형식으로 만들어서 결과만 출력해줘."
+    request = "\"" + ori_text + "\" 가 원래 텍스트일 때 타임스탬프 결과야. " + request + "타임스탬프에 원래 텍스트와 다른 단어들과 띄어쓰기가 존재하는데 이것을 원래 텍스트와 일치하도록 바꾸고 타임스탬프로 만들어줘. 최종 결과를 json 형식으로 만들어서 결과만 출력해줘."
     print("타임스탬프 gpt 요청 : " + request)
 
     client = OpenAI(api_key = gpt_key)

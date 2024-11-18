@@ -17,6 +17,8 @@ from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 
 from server.analysis.get_timestamp import extract_word_timestamps, load_models
 
+from server.analysis import *
+
 import os
 import shutil
 
@@ -56,7 +58,7 @@ async def set_user(request: UserDTO):
             'sex': request.sex
         }
 
-        user_ref = userData_db.document()
+        user_ref = userData_db.document(request.user_id)
         user_ref.set(user_save_dto)
 
     except Exception as e:
@@ -82,7 +84,7 @@ async def translate_text(request: TransTextDTO):
         translated_text_ref = translatedText_db.document()
         translated_text_ref.set(trans_text_save_dto)
 
-        audio_db_collection = 'gcTTS'
+        audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
         audio = tts.getTTS(translated_text)
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
@@ -90,9 +92,9 @@ async def translate_text(request: TransTextDTO):
 
         response_dto = response_dto = TransTextReDTO(
             text_id=text_ref.id,
-            text_data=text_save_dto,
+            text_data=text_save_dto.get('text'),
             translated_text_id=translated_text_ref.id,
-            translated_text_data=trans_text_save_dto,
+            translated_text_data=trans_text_save_dto.get('text'),
             audio_title=audio_db_collection + translated_text_ref.id + audio_type
         )
 
@@ -114,7 +116,7 @@ async def get_tts(request: Request) :
         translated_text_ref = translatedText_db.document()
         translated_text_ref.set(trans_text_save_dto)
 
-        audio_db_collection = 'gcTTS'
+        audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
         audio = tts.getTTS(translated_text)
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
@@ -158,12 +160,32 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         with open(user_voice_path, "wb") as buffer:
             shutil.copyfileobj(user_voice.file, buffer)
 
+        with open(user_voice_path, "rb") as audio_file:
+            audio = audio_file.read()
+
+        audio_db_collection = 'userVoice/'
+        blob = storage.bucket().blob(audio_db_collection + user_voice.filename)
+        blob.upload_from_string(audio, content_type="audio/wav")
+
         # tts_voice 파일 저장
         tts_voice_path = os.path.join(upload_dir, tts_voice.filename)
         with open(tts_voice_path, "wb") as buffer:
             shutil.copyfileobj(tts_voice.file, buffer)
 
+        with open(tts_voice_path, "rb") as audio_file:
+            tts_audio = audio_file.read()
 
+        # Firebase Storage에 업로드
+        tts_audio_db_collection = 'ttsVoice/'
+        tts_blob = storage.bucket().blob(tts_audio_db_collection + tts_voice.filename)
+        tts_blob.upload_from_string(tts_audio, content_type="audio/wav")
+
+        sampling_rate, filtered_data, pitch_values, time_steps = process_and_save_filtered_audio(
+        input_file_path=user_voice_path,
+        output_file_path=user_voice_path
+        )
+
+        tts_sampling_rate, tts_data, pitch_values_tts, time_steps_tts = extract_pitch_from_tts(tts_voice_path)
 
         os.remove(user_voice_path)
         os.remove(tts_voice_path)
