@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:atos/inputs/analyzing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key, required this.userName, required this.id});
@@ -17,6 +20,11 @@ class AddState extends State<AddPage> {
   var inputText = '';
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
+
+  Map<String, String> headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +65,15 @@ class AddState extends State<AddPage> {
                   }
 
                   try {
-                    // Firestore에 데이터 저장
-                    await db.collection('toTranslateText').doc().set({
-                      "text": '${auth.currentUser?.photoURL ?? ''}$inputText'
-                    });
+                    http.Response response = await http.post(
+                        Uri.parse('http://localhost:8000/set_user'),
+                        body:
+                            json.encode({'user_id': widget.id, 'sex': "male"}),
+                        headers: headers);
+
+                    if (response.statusCode != 200) {
+                      debugPrint("회원가입 오류.");
+                    }
 
                     if (mounted) {
                       Navigator.of(context).push(

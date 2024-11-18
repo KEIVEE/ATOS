@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -21,6 +24,10 @@ class RegisterState extends State<RegisterPage> {
   var idChecked = false;
   var registerTried = false;
   final regions = ['경상도', '전라도', '충청도', '강원도', '제주도'];
+
+  Map<String, String> headers = {
+    'Content-Type': 'application/json',
+  };
 
   var region = "";
 
@@ -68,12 +75,22 @@ class RegisterState extends State<RegisterPage> {
 
     try {
       // Firebase Auth로 사용자 생성
+
+      http.Response response = await http.post(
+          Uri.parse('http://10.210.61.99:8000/set-user'),
+          body: json.encode({'user_id': id, 'region': region, 'sex': "male"}),
+          headers: headers);
+
+      if (response.statusCode != 200) {
+        debugPrint("회원가입 오류.");
+      }
+
       await _auth.createUserWithEmailAndPassword(
         email: '$id@example.com',
         password: password,
       );
       _auth.currentUser?.updateDisplayName(nickname);
-      _auth.currentUser?.updatePhotoURL(region);
+      //_auth.currentUser?.updatePhotoURL(region);
 
       if (mounted) {
         Navigator.pop(context); // 성공적으로 회원가입이 완료되면 뒤로 이동
