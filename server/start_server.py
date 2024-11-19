@@ -56,7 +56,7 @@ async def startup_event():
 def read_root():
     return 'Server for ATOS project'
 
-@app.get('/login/{user_id}')
+@app.get('/login/{user_id}',description='로그인 기록 저장(로그인 후 호출하기)\n날짜별 하나만 저장 가능')
 async def login(user_id: str): 
     try:
         login_date = str(datetime.now().date())
@@ -77,7 +77,7 @@ async def login(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.get('/get-login-history/{user_id}')
+@app.get('/get-login-history/{user_id}',description='로그인 기록 조회')
 async def get_login_history(user_id: str):
     try:
         query = userConnection_db.where('user_id', '==', user_id).stream()
@@ -95,7 +95,7 @@ async def get_login_history(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.post('/set-user')
+@app.post('/set-user',description='사용자 정보 저장')
 async def set_user(request: UserDTO):
     try:
         user_save_dto = {
@@ -111,7 +111,7 @@ async def set_user(request: UserDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 
-@app.post('/translate-text',response_model=TransTextReDTO) 
+@app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성') 
 async def translate_text(request: TransTextDTO):
     try:
         text_save_dto = {
@@ -149,7 +149,7 @@ async def translate_text(request: TransTextDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post("/get-tts", 
+@app.post("/get-tts", description="번역하지 않고 tts만 생성.",
           responses={
               200: {
                   "description": "음성 파일을 반환합니다.",
@@ -178,7 +178,7 @@ async def get_tts(request: GetTTSReqDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/get-user-practice/{user_id}")
+@app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회")
 async def get_user_practice(user_id : str) :
     try:
         query = translatedText_db.where("user_id", "==", user_id).stream()
@@ -197,7 +197,7 @@ async def get_user_practice(user_id : str) :
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 
-@app.post("/voice-analysis")
+@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환")
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...)):
     try :
         upload_dir = "server/filtered_audio"
