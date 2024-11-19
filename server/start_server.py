@@ -2,13 +2,11 @@ import server.server_init as server_init
 import server.text_translate as tt
 import server.gctts as tts
 
-import tempfile
-
 import firebase_admin
 from firebase_admin import firestore
 from firebase_admin import storage
 
-from fastapi import FastAPI, Request, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 
@@ -16,7 +14,6 @@ from server.DTO.set_user_dto import UserDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO
 
-#from server.analysis.get_timestamp import extract_word_timestamps, load_models
 from server.analysis import *
 
 from server.timestamp_cal import ts_cal
@@ -28,13 +25,8 @@ import shutil
 
 import whisperx
 
-init_call_os_text = True  # 처음에는 True로 설정
-init_call_os_audio = True 
-
 if not firebase_admin._apps:  # 이미 초기화된 앱이 없으면 초기화
     server_init.init_server()
-
-print('서버 시작')
 
 db = firestore.client()
 app = FastAPI()

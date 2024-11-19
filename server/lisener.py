@@ -1,3 +1,6 @@
+init_call_os_text = True  # 처음에는 True로 설정
+init_call_os_audio = True 
+
 # 텍스트 디비 변경 시 실행
 def os_text(doc_snapshot, changes, read_time):
     global init_call_os_text
