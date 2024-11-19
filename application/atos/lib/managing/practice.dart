@@ -53,7 +53,8 @@ class PracticeState extends State<PracticePage> {
                 itemBuilder: (context, index) {
                   var item = snapshot.data![index];
                   return TitleButton(
-                    title: item['text'],
+                    title: "제목",
+                    sentence: item['text'],
                     id: widget.id,
                   );
                 },

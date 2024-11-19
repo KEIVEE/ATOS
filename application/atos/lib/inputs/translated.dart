@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http; // HTTP 요청을 위한 패키지
 import 'dart:io'; // File 객체 사용
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:atos/inputs/inputanalyzing.dart';
+//import 'package:atos/inputs/inputanalyzing.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:audioplayers/audioplayers.dart';
 

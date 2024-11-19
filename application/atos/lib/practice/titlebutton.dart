@@ -1,16 +1,31 @@
+import 'package:atos/practice/content.dart';
 import 'package:flutter/material.dart';
 
 class TitleButton extends StatelessWidget {
   final String title;
+  final String sentence;
   final String id;
 
-  TitleButton({required this.title, required this.id});
+  const TitleButton(
+      {super.key,
+      required this.title,
+      required this.id,
+      required this.sentence});
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
       onPressed: () {
-        // Add your onPressed code here!
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            settings: RouteSettings(name: "/content"),
+            builder: (context) => ContentPage(
+              id: id,
+              title: title,
+              sentence: sentence,
+            ),
+          ),
+        );
       },
       style: OutlinedButton.styleFrom(
         padding:

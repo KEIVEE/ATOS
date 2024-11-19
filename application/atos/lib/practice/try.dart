@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:atos/inputs/translating.dart';
+//import 'package:atos/practice/reanalyzing.dart';
 
 // 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 

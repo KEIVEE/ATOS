@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:atos/practice/try.dart';
 
-// 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
-
 class ContentPage extends StatefulWidget {
-  const ContentPage({super.key, required this.id});
+  const ContentPage(
+      {super.key,
+      required this.id,
+      required this.title,
+      required this.sentence});
   final String id;
+  final String title;
+  final String sentence;
 
   @override
   State<ContentPage> createState() => ContentState();
@@ -27,8 +31,8 @@ class ContentState extends State<ContentPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const Text('제목'),
-            const Text('"문장."'),
+            Text(widget.title),
+            Text(widget.sentence),
             const Text('문명 그래프'),
             OutlinedButton(
                 onPressed: () {
