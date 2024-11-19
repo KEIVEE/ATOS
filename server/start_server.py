@@ -24,6 +24,8 @@ from server.timestamp_cal import ts_cal
 import os
 import shutil
 
+import whisperx
+
 init_call_os_text = True  # 처음에는 True로 설정
 init_call_os_audio = True 
 
