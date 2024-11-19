@@ -15,26 +15,24 @@ class LoginState extends State<LoginPage> {
   var id = "";
   var password = "";
   var loginTried = false;
-  var userName = "";
   var loginFailed = false;
 
   Future<void> signInWithEmailAndPassword() async {
     try {
-      UserCredential credential = await firebaseAuth.signInWithEmailAndPassword(
+      await firebaseAuth.signInWithEmailAndPassword(
         email: '$id@example.com',
         password: password,
       );
 
       // 로그인 성공 시, 사용자 이름을 설정하고 페이지 이동
       setState(() {
-        userName = credential.user?.displayName ?? "사용자";
         loginFailed = false;
       });
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             settings: const RouteSettings(name: "/manage"),
-            builder: (context) => ManagePage(userName: userName, id: id),
+            builder: (context) => ManagePage(id: id),
           ),
         );
       }

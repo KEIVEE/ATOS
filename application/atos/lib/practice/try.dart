@@ -4,8 +4,7 @@ import 'package:atos/inputs/translating.dart';
 // 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 
 class TryPage extends StatefulWidget {
-  const TryPage({super.key, required this.userName, required this.id});
-  final String userName;
+  const TryPage({super.key, required this.id});
   final String id;
 
   @override

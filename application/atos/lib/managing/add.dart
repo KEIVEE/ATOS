@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:atos/inputs/translating.dart';
 
 class AddPage extends StatefulWidget {
-  const AddPage({super.key, required this.userName, required this.id});
-
-  final String userName;
+  const AddPage({super.key, required this.id});
   final String id;
 
   @override
@@ -57,7 +55,6 @@ class AddState extends State<AddPage> {
                       MaterialPageRoute(
                         settings: const RouteSettings(name: "/translating"),
                         builder: (context) => AnalyzingPage(
-                          userName: widget.userName,
                           id: widget.id,
                           inputText: inputText,
                         ),

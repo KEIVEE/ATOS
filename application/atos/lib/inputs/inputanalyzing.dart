@@ -8,12 +8,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class InputAnalyzingPage extends StatefulWidget {
   const InputAnalyzingPage({
     super.key,
-    required this.userName,
     required this.id,
     required this.inputText,
   });
 
-  final String userName;
   final String id;
   final String inputText;
 
@@ -73,8 +71,7 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         settings: const RouteSettings(name: "/translated"),
-        builder: (context) =>
-            ShowPage(userName: widget.userName, id: widget.id),
+        builder: (context) => ShowPage(id: widget.id),
       ),
     );
   }

@@ -3,9 +3,7 @@ import 'package:atos/account/setting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.userName, required this.id});
-
-  final String userName;
+  const HomePage({super.key, required this.id});
   final String id;
 
   @override
@@ -56,8 +54,7 @@ class HomeState extends State<HomePage> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     settings: const RouteSettings(name: "/settiing"),
-                    builder: (context) =>
-                        SettingPage(userName: widget.userName, id: widget.id),
+                    builder: (context) => SettingPage(id: widget.id),
                   ),
                 );
               },

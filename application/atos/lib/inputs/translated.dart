@@ -13,11 +13,9 @@ import 'package:audioplayers/audioplayers.dart';
 class TranslatedPage extends StatefulWidget {
   const TranslatedPage(
       {super.key,
-      required this.userName,
       required this.id,
       required this.translatedText,
       required this.audioName});
-  final String userName;
   final String id;
   final String translatedText;
   final String audioName;

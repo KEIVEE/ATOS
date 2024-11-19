@@ -1,49 +1,65 @@
+import 'dart:convert';
+import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
-import 'package:atos/practice/content.dart';
+import 'package:http/http.dart' as http;
+import 'package:atos/practice/titlebutton.dart';
 
 class PracticePage extends StatefulWidget {
-  const PracticePage({super.key, required this.userName, required this.id});
-
-  final String userName;
   final String id;
+
+  const PracticePage({super.key, required this.id});
 
   @override
   State<PracticePage> createState() => PracticeState();
 }
 
 class PracticeState extends State<PracticePage> {
-  var inputText = '';
+  late Future<List<dynamic>> _futureData;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureData = _fetchData();
+  }
+
+  Future<List<dynamic>> _fetchData() async {
+    final response = await http.get(
+        Uri.parse('${ControlUri.BASE_URL}/get-user-practice/${widget.id}'));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            OutlinedButton(
-                onPressed: null,
-                style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0))),
-                child: const Text('저장한 리스트?')),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    settings: const RouteSettings(name: "/content"),
-                    builder: (context) =>
-                        ContentPage(userName: widget.userName, id: widget.id),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('연습하나'),
-            ),
-          ],
+        child: FutureBuilder<List<dynamic>>(
+          future: _futureData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Text('No data available');
+            } else {
+              return ListView.builder(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) {
+                  var item = snapshot.data![index];
+                  return TitleButton(
+                    title: item['text'],
+                    id: widget.id,
+                  );
+                },
+              );
+            }
+          },
         ),
       ),
     );

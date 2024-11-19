@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:atos/inputs/translated.dart';
@@ -8,12 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AnalyzingPage extends StatefulWidget {
   const AnalyzingPage({
     super.key,
-    required this.userName,
     required this.id,
     required this.inputText,
   });
 
-  final String userName;
   final String id;
   final String inputText;
 
@@ -29,8 +28,12 @@ class AnalyzingState extends State<AnalyzingPage> {
   @override
   void initState() {
     super.initState();
-    _fetchRegion();
-    _processRequest();
+    _fetchRegionAndProcessRequest();
+  }
+
+  Future<void> _fetchRegionAndProcessRequest() async {
+    await _fetchRegion();
+    await _processRequest();
   }
 
   Future<void> _fetchRegion() async {
@@ -39,7 +42,7 @@ class AnalyzingState extends State<AnalyzingPage> {
       DocumentSnapshot userDoc =
           await db.collection('userData').doc(widget.id).get();
       setState(() {
-        region = userDoc['region'] ?? '';
+        region = userDoc['region'] ?? ' ';
       });
     }
   }
@@ -48,7 +51,7 @@ class AnalyzingState extends State<AnalyzingPage> {
     try {
       final response = await http.post(
         //Uri.parse('http://222.237.88.211:8000/translate-text'),
-        Uri.parse('http://10.210.62.114:8000/translate-text'),
+        Uri.parse('${ControlUri.BASE_URL}/translate-text'),
         body: json.encode({
           'text': widget.inputText,
           'user_id': widget.id,
@@ -65,7 +68,6 @@ class AnalyzingState extends State<AnalyzingPage> {
             MaterialPageRoute(
               settings: const RouteSettings(name: "/translated"),
               builder: (context) => TranslatedPage(
-                userName: widget.userName,
                 id: widget.id,
                 translatedText: responseData['translated_text_data'],
                 audioName: responseData['audio_title'],
@@ -93,7 +95,7 @@ class AnalyzingState extends State<AnalyzingPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text('번역중이에요'),
-              Text(region),
+              //Text(region),
               SizedBox(
                 width: 100, // 원하는 너비
                 height: 100, // 원하는 높이
