@@ -14,7 +14,7 @@ def gpt_translate (region, text):
     model="gpt-4o",
     max_tokens=200,
     messages=[
-        { "role" : "system", "content" : region + " 사투리를 표준어로 번역해줘. 번역한 텍스트만을 답해줘."},
+        { "role" : "system", "content" : region + " 사투리 단어만을 표준어로 번역해줘. 외래어, 외국어, 영어는 번역하지말고 그대로 사용해. 번역한 텍스트만을 답해줘. "},
         { "role" : "user", "content" : text}
     ])
 
