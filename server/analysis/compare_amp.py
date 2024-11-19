@@ -9,7 +9,7 @@ def compare_amplitude_differences(user_word_intervals, tts_word_intervals, filte
     max_amplitude_difference = 0  # 최고 진폭 차이 추적용
     user_threshold_exceeding_words = []
     tts_threshold_exceeding_words = []
-    for user_word, tts_word in zip(user_word_intervals, tts_word_intervals):
+    for idx, (user_word, tts_word) in enumerate(zip(user_word_intervals, tts_word_intervals)):
         # 사용자 음성 단어 세그먼트의 시작과 끝 인덱스 계산
         user_start_idx = int(user_word['start'] * sampling_rate)
         user_end_idx = int(user_word['end'] * sampling_rate)
@@ -42,10 +42,10 @@ def compare_amplitude_differences(user_word_intervals, tts_word_intervals, filte
               max_amplitude_difference = max_amplitude_difference_temp
               max_diff_word = {"word": user_word['word']}
             if user_amplitude_difference - tts_amplitude_difference > threshold :
-              user_threshold_exceeding_words.append({"word": user_word['word']})
+              user_threshold_exceeding_words.append({"word": user_word['word'], "idx": idx})
 
             elif tts_amplitude_difference - user_amplitude_difference > threshold:
-              tts_threshold_exceeding_words.append({"word": user_word['word']})
+              tts_threshold_exceeding_words.append({"word": user_word['word'], "idx": idx})
 
             '''
             # 진폭 차이 비교

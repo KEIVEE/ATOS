@@ -45,9 +45,9 @@ def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values
                 tts_pitch_diff = tts_pitch_max - tts_pitch_min
                 tts_max_time = tts_time_samples[np.argmax(tts_pitch_samples)]  # 최대 피치에 해당하는 시간
                 if user_pitch_diff - tts_pitch_diff > threshold:
-                  user_results.append({'word': user_word['word']})
+                    user_results.append({'word': user_word['word'], "idx": i})
                 if tts_pitch_diff - user_pitch_diff > threshold:
-                  tts_results.append({'word': user_word['word']})
+                    tts_results.append({'word': user_word['word'], "idx": i})
 
                 '''
                 # 피치 차이가 임계값 초과하는 경우 결과 저장
