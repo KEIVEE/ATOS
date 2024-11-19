@@ -14,6 +14,7 @@ from io import BytesIO
 
 from server.DTO.set_user_dto import UserDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
+from server.DTO.get_tts_dto import GetTTSReqDTO
 
 from server.analysis.get_timestamp import extract_word_timestamps, load_models
 
@@ -107,22 +108,24 @@ async def translate_text(request: TransTextDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post("/get-tts")
-async def get_tts(request: Request) :
+@app.post("/get-tts", 
+          responses={
+              200: {
+                  "description": "음성 파일을 반환합니다.",
+                  "content": {"audio/wav": {}}
+                  }})
+async def get_tts(request: GetTTSReqDTO): 
     try:
-        body = request.json()
-
-        translated_text = body.get('text')
         trans_text_save_dto = {
-            'user_id': body.get('user_id'),
-            'text': translated_text
+            'user_id': request.user_id,
+            'text': request.text
         }
         translated_text_ref = translatedText_db.document()
         translated_text_ref.set(trans_text_save_dto)
 
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
-        audio = tts.getTTS(translated_text)
+        audio = tts.getTTS(request.text)
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
         blob.upload_from_string(audio, content_type="audio/wav")
 
