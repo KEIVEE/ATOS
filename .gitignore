@@ -1,0 +1,9 @@
+.DS_Store
+server/__pycache__
+server/.env
+server/test.py
+server/keys
+server/keys/atos-cd1-firebase-adminsdk-5vlmg-b99ed3548b.json
+server/DTO/__pycache__
+server/analysis/__pycache__
+server/filtered_audio
