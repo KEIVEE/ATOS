@@ -16,11 +16,12 @@ from server.DTO.set_user_dto import UserDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO
 
-from server.analysis.get_timestamp import extract_word_timestamps, load_models
-
+#from server.analysis.get_timestamp import extract_word_timestamps, load_models
 from server.analysis import *
 
 from server.timestamp_cal import ts_cal
+
+from datetime import datetime
 
 import os
 import shutil
@@ -45,6 +46,7 @@ toTranslateText_db = db.collection('toTranslateText')
 userAudio_db = db.collection('userAudio')
 translatedText_db = db.collection('translatedText')
 userData_db = db.collection('userData')
+userConnection_db = db.collection('userConnection')
 
 @app.on_event("startup")
 async def startup_event():
@@ -53,6 +55,45 @@ async def startup_event():
 @app.get('/')
 def read_root():
     return 'Server for ATOS project'
+
+@app.get('/login/{user_id}')
+async def login(user_id: str): 
+    try:
+        login_date = str(datetime.now().date())
+        connection_save_dto = {
+            'user_id': user_id,
+            'login_date': login_date
+        }
+
+        query = userConnection_db.where('user_id', '==', user_id).where('login_date', '==', login_date).stream()
+        existing_docs = [doc for doc in query]
+
+        if len(existing_docs) == 0 :
+            userConnection_db.document().set(connection_save_dto)
+            return True
+        
+        return False
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
+@app.get('/get-login-history/{user_id}')
+async def get_login_history(user_id: str):
+    try:
+        query = userConnection_db.where('user_id', '==', user_id).stream()
+
+        login_history = []
+
+        for doc in query:
+            login_history.append({**doc.to_dict()})
+
+        if not login_history:
+            raise HTTPException(status_code=404, detail="로그인 기록이 없습니다.")
+
+        return login_history
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/set-user')
 async def set_user(request: UserDTO):
@@ -145,12 +186,12 @@ async def get_user_practice(user_id : str) :
         translated_texts = []
         
         for doc in query:
-            translated_texts.append({**doc.to_dict(), 'id': doc.id})
+            translated_texts.append({**doc.to_dict()})
 
         if not translated_texts:
             raise HTTPException(status_code=404, detail="사용자의 연습 데이터가 없습니다.")
         
-        return {"translated_texts": translated_texts}
+        return translated_texts
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
