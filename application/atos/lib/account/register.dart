@@ -77,7 +77,7 @@ class RegisterState extends State<RegisterPage> {
       // Firebase Auth로 사용자 생성
 
       http.Response response = await http.post(
-          Uri.parse('http://10.210.61.99:8000/set-user'),
+          Uri.parse('http://222.237.88.211:8000/set-user'),
           body: json.encode({'user_id': id, 'region': region, 'sex': "male"}),
           headers: headers);
 

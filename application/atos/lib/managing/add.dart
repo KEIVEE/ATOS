@@ -1,10 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:atos/inputs/analyzing.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
+import 'package:atos/inputs/translating.dart';
 
 class AddPage extends StatefulWidget {
   const AddPage({super.key, required this.userName, required this.id});
@@ -18,13 +13,8 @@ class AddPage extends StatefulWidget {
 
 class AddState extends State<AddPage> {
   var inputText = '';
-  final FirebaseAuth auth = FirebaseAuth.instance;
-  final FirebaseFirestore db = FirebaseFirestore.instance;
-
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  };
+  var region = '';
+  var translatedText = '';
 
   @override
   Widget build(BuildContext context) {
@@ -62,39 +52,17 @@ class AddState extends State<AddPage> {
                       const SnackBar(content: Text('텍스트를 입력해주세요.')),
                     );
                     return;
-                  }
-
-                  try {
-                    http.Response response = await http.post(
-                        Uri.parse('http://localhost:8000/set_user'),
-                        body:
-                            json.encode({'user_id': widget.id, 'sex': "male"}),
-                        headers: headers);
-
-                    if (response.statusCode != 200) {
-                      debugPrint("회원가입 오류.");
-                    }
-
-                    if (mounted) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          settings: const RouteSettings(name: "/analyzing"),
-                          builder: (context) => AnalyzingPage(
-                            duration: const Duration(seconds: 3),
-                            userName: widget.userName,
-                            id: widget.id,
-                            previousPageName: 'AddPage',
-                          ),
+                  } else if (mounted) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: "/translating"),
+                        builder: (context) => AnalyzingPage(
+                          userName: widget.userName,
+                          id: widget.id,
+                          inputText: inputText,
                         ),
-                      );
-                    }
-                  } catch (e) {
-                    // 예외 처리
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('오류 발생: ${e.toString()}')),
-                      );
-                    }
+                      ),
+                    );
                   }
                 },
                 style: OutlinedButton.styleFrom(
