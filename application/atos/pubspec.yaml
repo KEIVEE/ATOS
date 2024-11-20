@@ -45,6 +45,7 @@ dependencies:
   flutter_sound: ^9.2.13
   path:
   firebase_storage:
+  dio:
 
 dev_dependencies:
   flutter_test:

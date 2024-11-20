@@ -24,6 +24,7 @@ class RegisterState extends State<RegisterPage> {
   var idChecked = false;
   var registerTried = false;
   final regions = ['경상도', '전라도', '충청도', '강원도', '제주도'];
+  String selectedGender = "male"; // 성별을 저장할 변수 (기본값: 남성)
 
   Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -78,7 +79,8 @@ class RegisterState extends State<RegisterPage> {
 
       http.Response response = await http.post(
           Uri.parse('${ControlUri.BASE_URL}/set-user'),
-          body: json.encode({'user_id': id, 'region': region, 'sex': "male"}),
+          body: json
+              .encode({'user_id': id, 'region': region, 'sex': selectedGender}),
           headers: headers);
 
       if (response.statusCode != 200) {
@@ -167,6 +169,24 @@ class RegisterState extends State<RegisterPage> {
                     ? Colors.green
                     : Colors.red,
               ),
+            ),
+            DropdownButton<String>(
+              value: selectedGender,
+              items: <String>['남성', '여성'].map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  if (newValue == '남성') {
+                    selectedGender = "male";
+                  } else if (newValue == '여성') {
+                    selectedGender = "female";
+                  }
+                });
+              },
             ),
 
             // Password fields

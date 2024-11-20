@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 //import 'package:atos/inputs/inputanalyzing.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dio/dio.dart';
 
 // TranslatedPage는 음성 녹음 및 업로드와 관련된 기능을 포함하는 StatefulWidget
 class TranslatedPage extends StatefulWidget {
@@ -29,22 +30,52 @@ class _TranslatedState extends State<TranslatedPage> {
       sound.FlutterSoundRecorder(); // FlutterSoundRecorder 객체로 음성 녹음 기능 제공
   bool isRecording = false; // 녹음 중인지 여부를 저장하는 변수
   String? recordedFilePath; // 녹음된 파일 경로 저장
+  String? standardFilePath; // TTS 파일 경로 저장
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  String downloadURL = '';
+
   Future<void> _playAudio() async {
     try {
-      // Firebase Storage에서 파일의 다운로드 URL 가져오기
-      String downloadURL =
-          await _storage.ref().child(widget.audioName).getDownloadURL();
-
-      //print(downloadURL);
-
       // 오디오 플레이어를 통해 음성 파일 재생
       await _audioPlayer.play(UrlSource(downloadURL));
     } catch (e) {
       debugPrint("오디오 재생 오류: $e");
+    }
+  }
+
+  Future<void> setTTSDownloadUrl() async {
+    try {
+      // Firebase Storage에서 파일의 다운로드 URL 가져오기
+      String url =
+          await _storage.ref().child(widget.audioName).getDownloadURL();
+      setState(() {
+        downloadURL = url;
+      });
+      debugPrint("다운로드 URL 설정 성공: $downloadURL");
+    } catch (e) {
+      debugPrint("다운로드 링크 오류: $e");
+    }
+  }
+
+  Future<void> downloadAndSaveTTSFile() async {
+    try {
+      // 다운로드할 파일의 경로 설정
+      final directory = await getApplicationDocumentsDirectory();
+      standardFilePath = '${directory.path}/${widget.audioName}';
+
+      // 파일 다운로드
+      final response = await Dio().download(downloadURL, standardFilePath);
+
+      if (response.statusCode == 200) {
+        debugPrint("파일 다운로드 성공: $standardFilePath");
+      } else {
+        debugPrint("파일 다운로드 실패: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("파일 다운로드 오류: $e");
     }
   }
 
@@ -59,6 +90,12 @@ class _TranslatedState extends State<TranslatedPage> {
   void initState() {
     super.initState();
     _initializeRecorder(); // 초기화 시 녹음기 초기화
+    _initializeDownload();
+  }
+
+  Future<void> _initializeDownload() async {
+    await setTTSDownloadUrl();
+    await downloadAndSaveTTSFile();
   }
 
   // 마이크 권한을 요청하고 녹음기를 초기화하는 메소드
@@ -80,7 +117,7 @@ class _TranslatedState extends State<TranslatedPage> {
   Future<void> startRecording() async {
     final directory =
         await getApplicationDocumentsDirectory(); // 앱의 문서 디렉터리 가져오기
-    final path = p.join(directory.path, 'recorded_audio.aac'); // 녹음 파일 경로 설정
+    final path = p.join(directory.path, 'recorded_audio.wav'); // 녹음 파일 경로 설정
     await recorder.startRecorder(toFile: path); // 녹음 시작
     if (mounted) {
       // 위젯이 여전히 화면에 있으면
@@ -100,27 +137,27 @@ class _TranslatedState extends State<TranslatedPage> {
         isRecording = false; // 녹음 상태 변경
       });
     }
-    if (recordedFilePath != null) {
-      // 녹음이 완료되면 파일 업로드
-      await uploadAudioFile(File(recordedFilePath!));
-    }
   }
 
   // 서버에 음성 파일을 업로드하는 메소드
-  Future<void> uploadAudioFile(File audioFile) async {
+  Future<void> uploadAudioFile(File userAudio, File standardAudio) async {
     const String apiUrl = 'http://222.237.88.211:8000/'; // 서버 API URL
     try {
       // 현재 시각을 가져옵니다.
-      String currentTime = DateTime.now().toIso8601String();
+      //String currentTime = DateTime.now().toIso8601String();
 
       // HTTP 요청을 생성
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
       request.files.add(await http.MultipartFile.fromPath(
-        'file', // 서버에서 받을 필드 이름
-        audioFile.path, // 파일 경로
+        'user_voice', // 서버에서 받을 필드 이름
+        userAudio.path, // 파일 경로
       ));
-      request.fields['id'] = widget.id; // 사용자 ID 필드 추가
-      request.fields['time'] = currentTime; // 현재 시각 필드 추가
+      request.files.add(await http.MultipartFile.fromPath(
+        'user_voice', // 서버에서 받을 필드 이름
+        standardAudio.path, // 파일 경로
+      ));
+      request.fields['user_id'] = widget.id; // 사용자 ID 필드 추가
+      request.fields['text'] = widget.translatedText;
 
       // 요청을 전송하고 응답을 받음
       var response = await request.send();
@@ -178,19 +215,10 @@ class _TranslatedState extends State<TranslatedPage> {
             const SizedBox(height: 20),
             // 분석 시작 버튼
             OutlinedButton(
-              onPressed: null,
-              /*() {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => InputAnalyzingPage(
-                      duration: const Duration(seconds: 3),
-                      userName: widget.userName,
-                      id: widget.id,
-                      previousPageName: 'TranslatedPage',
-                    ),
-                  ),
-                );
-              },*/
+              onPressed: () async {
+                await uploadAudioFile(
+                    File(recordedFilePath!), File(standardFilePath!));
+              },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
@@ -209,27 +237,6 @@ class _TranslatedState extends State<TranslatedPage> {
               iconSize: 80,
             ),
             const Text('양옆으로 바꿀 거임. 아니면 녹음 화면을 따로 만들던가?'),
-            Text(widget.audioName),
-            // 다시 녹음 버튼
-            OutlinedButton(
-              onPressed: isRecording ? stopRecording : startRecording,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: const Text('다시 녹음'),
-            ),
-            // 정지 버튼
-            OutlinedButton(
-              onPressed: stopRecording,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: const Text('정지'),
-            ),
 
             OutlinedButton(
               onPressed: _playAudio,

@@ -1,5 +1,10 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:atos/control/uri.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key, required this.id});
@@ -14,13 +19,56 @@ class SettingState extends State<SettingPage> {
   late TextEditingController _nicknameController;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+
+  final List<String> regions = ['경상도', '전라도', '충청도', '강원도', '제주도'];
+
+  String region = "";
 
   @override
   void initState() {
     super.initState();
-    // 초기 닉네임 설정
     _nicknameController = TextEditingController();
     _initializeNickname();
+    _fetchRegion();
+  }
+
+  Future<void> _fetchRegion() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc =
+          await db.collection('userData').doc(widget.id).get();
+      setState(() {
+        region = userDoc['region'] ?? ' ';
+      });
+    }
+  }
+
+  Future<void> _updateRegion(String newRegion) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      final response = await http.post(
+        Uri.parse('${ControlUri.BASE_URL}/'), // 실제 서버 URL로 변경
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': user.uid,
+          'region': newRegion,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          region = newRegion;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('지역이 성공적으로 변경되었습니다.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('지역 변경에 실패했습니다.')),
+        );
+      }
+    }
   }
 
   Future<void> _initializeNickname() async {
@@ -65,16 +113,54 @@ class SettingState extends State<SettingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            // 지역 변경 버튼 (여기선 팝업으로 하겠다고 언급)
             OutlinedButton(
-              onPressed: null,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('지역 변경하기'),
+                      content: DropdownButton<String>(
+                        value: region,
+                        items: regions.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            region = newValue!;
+                          });
+                        },
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context); // 다이얼로그 닫기
+                          },
+                          child: Text('취소'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _updateRegion(region); // 지역 업데이트
+                            Navigator.pop(context); // 다이얼로그 닫기
+                          },
+                          child: Text('저장'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),
               ),
-              child: const Text('지역 변경하기: 팝업으로 할 거임.'),
+              child: const Text('지역 변경하기'),
             ),
+            //Text(region),
             // 닉네임 수정 버튼
             OutlinedButton(
               onPressed: () {
