@@ -2,7 +2,7 @@ import requests
 import time
 from server.settings import TC_TTS_KEY
 
-actor_id = '66b4523f259dc43de649c1d1'
+actor_id = '658d1bc867f8ac8fa3cbbeec'
 
 def getTCTTS(text):
     url = "https://typecast.ai/api/speak"

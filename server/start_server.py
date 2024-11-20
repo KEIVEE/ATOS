@@ -14,6 +14,7 @@ from io import BytesIO
 from server.DTO.set_user_dto import UserDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO
+from server.DTO.user_practice_dto import SavePracticeDTO
 
 from server.analysis import *
 
@@ -40,8 +41,8 @@ userAudio_db = db.collection('userAudio')
 translatedText_db = db.collection('translatedText')
 userData_db = db.collection('userData')
 userConnection_db = db.collection('userConnection')
-
-
+tempText_db = db.collection('tempText')
+userPractice_db = db.collection('userPractice')
 
 @app.on_event("startup")
 async def startup_event():
@@ -221,26 +222,72 @@ async def get_tts_audio(audio_id: str):
 @app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회")
 async def get_user_practice(user_id : str) :
     try:
-        query = translatedText_db.where("user_id", "==", user_id).stream()
+        query = userPractice_db.where("user_id", "==", user_id).stream()
 
-        translated_texts = []
+        practices = []
         
         for doc in query:
-            translated_texts.append({**doc.to_dict()})
+            practices.append({**doc.to_dict(), 'doc_id': doc.id})
 
-        if not translated_texts:
+        if not practices:
             raise HTTPException(status_code=404, detail="사용자의 연습 데이터가 없습니다.")
         
-        return translated_texts
+        return practices
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.post("/save-user-practice", description="사용자의 연습 데이터 저장")
+async def save_user_practice(request: SavePracticeDTO):
+    try:
+        text = tempText_db.document(request.temp_id).get().to_dict().get('text')
+        audio_db_collection = 'temp/' + request.temp_id + '/'
+        blob = bucket.blob(audio_db_collection + 'userVoice.wav')
+        blob2 = bucket.blob(audio_db_collection + 'ttsVoice.wav')
+        user_voice = blob.download_as_string()
+        tts_voice = blob2.download_as_string()
+
+        date = datetime.now()
+        formatted_date = str(date.strftime("%Y%m%d%H%M%S"))
+
+        practice_save_db = 'userPractice/'+request.user_id+ formatted_date +'/'
+        blob = bucket.blob(practice_save_db + 'userVoice.wav')
+        blob.upload_from_string(user_voice, content_type="audio/wav")
+        blob = bucket.blob(practice_save_db + 'ttsVoice.wav')
+        blob.upload_from_string(tts_voice, content_type="audio/wav")
+
+        user_practice_save_dto = {
+            'user_id': request.user_id,
+            'title': request.title,
+            'description': request.description,
+            'text': text,
+            'date': str(date.date()),
+            'voice_path': practice_save_db
+        }
+
+        userPractice_db.document().set(user_practice_save_dto)
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
 
 @app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환")
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
     try :
+        temp_save_id = user_id + str(datetime.now().strftime("%Y%m%d%H%M%S"))
         upload_dir = "server/filtered_audio"
+        temp_db_collection = 'temp/'+temp_save_id+'/'
         os.makedirs(upload_dir, exist_ok=True)
+
+        # 텍스트 임시 저장
+        text_save_dto = {
+            'user_id': user_id,
+            'text': text
+        }
+        temp_text_ref = tempText_db.document(temp_save_id)
+        temp_text_ref.set(text_save_dto)
 
         # user_voice 파일 저장
         user_voice_path = os.path.join(upload_dir, user_voice.filename)
@@ -249,9 +296,8 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
 
         with open(user_voice_path, "rb") as audio_file:
             audio = audio_file.read()
-
-        audio_db_collection = 'userVoice/'
-        blob = bucket.blob(audio_db_collection + user_voice.filename)
+        
+        blob = bucket.blob(temp_db_collection + 'userVoice.wav')
         blob.upload_from_string(audio, content_type="audio/wav")
 
         # tts_voice 파일 저장
@@ -262,9 +308,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         with open(tts_voice_path, "rb") as audio_file:
             tts_audio = audio_file.read()
 
-        # Firebase Storage에 업로드
-        tts_audio_db_collection = 'ttsVoice/'
-        blob = bucket.blob(tts_audio_db_collection + tts_voice.filename)
+        blob = bucket.blob(temp_db_collection + 'ttsVoice.wav')
         blob.upload_from_string(tts_audio, content_type="audio/wav")
 
         sampling_rate, filtered_data, pitch_values, time_steps = process_and_save_filtered_audio(input_file_path=user_voice_path)
@@ -300,14 +344,6 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         print(max_word)
         print("=================================================================================\n\n\n")
 
-        # for word_info in user_exceeding_words:
-        #     print(f"단어: {word_info['word']}이(가) 표준어 대비 세기 차이가 강해요")
-
-        # for word_info in tts_exceeding_words:
-        #     print(f"단어: {word_info['word']}이(가) 표준어 대비 세기 차이가 약해요")
-
-        # print(f"단어: {max_word['word']}이(가) 너무 세게 말해요.")
-
         u_results,t_results = calculate_pitch_differences(
         word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
 
@@ -318,10 +354,6 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         print("t_results : ")
         print(t_results)
         print("=================================================================================\n\n\n")
-        # for word_info in u_results:
-        #     print(f"단어: {word_info['word']}이(가) 표준어 대비 억양 차이가 심해요")
-        # for word_info in t_results:
-        #     print(f"단어: {word_info['word']}이(가) 표준어 대비 억양 차이가 약해요")
 
         # 세그먼트 비교
         highest_segment, lowest_segment = compare_segments(
@@ -335,23 +367,6 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         print("lowest_segment : ")
         print(lowest_segment)
 
-        # 결과 출력
-        # if highest_segment:
-        #     user_segment_high, tts_segment_high, avg_user_gradient_high, avg_tts_gradient_high = highest_segment
-        #     print(f"음성이 TTS 대비 가장 높은 기울기를 가진 세그먼트:")
-        #     print(f"사용자 세그먼트: {user_segment_high}, TTS 세그먼트: {tts_segment_high}")
-        #     print(f"사용자 평균 기울기: {avg_user_gradient_high:.4f}, TTS 평균 기울기: {avg_tts_gradient_high:.4f}")
-        #     print("음성이 TTS 대비 기울기가 높아요.")
-
-        # if lowest_segment:
-        #     user_segment_low, tts_segment_low, avg_user_gradient_low, avg_tts_gradient_low = lowest_segment
-        #     print(f"음성이 TTS 대비 가장 낮은 기울기를 가진 세그먼트:")
-        #     print(f"사용자 세그먼트: {user_segment_low}, TTS 세그먼트: {tts_segment_low}")
-        #     print(f"사용자 평균 기울기: {avg_user_gradient_low:.4f}, TTS 평균 기울기: {avg_tts_gradient_low:.4f}")
-        #     print("음성이 TTS 대비 기울기가 낮아요.")
-        # else:
-        #     print("세그먼트 비교에서 차이를 찾을 수 없습니다.")
-
         # 파일 삭제
         os.remove(user_voice_path)
         os.remove(tts_voice_path)
@@ -361,6 +376,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         # result 구성 요소
         # 1. 보정된 timestamp (json 형식)
         # 2. 사용자 음성과 TTS 음성의 세기 차이가 큰 단어 (json 형식)
+        # 3. temp_save_id (string) ==> 나중에 저장 시 사용
         return result
 
     except Exception as e:
