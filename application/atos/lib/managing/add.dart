@@ -13,6 +13,8 @@ class AddState extends State<AddPage> {
   var inputText = '';
   var region = '';
   var translatedText = '';
+  bool willTranslate = true;
+  String selectedTheme = '차분한';
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +43,34 @@ class AddState extends State<AddPage> {
                 inputText = text;
               },
             ),
-            const Text('바로 연습할건지, 아니면 번역을 거칠 건지'),
+            Row(
+              children: [
+                Checkbox(
+                  value: willTranslate,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      willTranslate = value ?? false;
+                    });
+                  },
+                ),
+                const Text('번역하지 않음'),
+              ],
+            ),
+            DropdownButton<String>(
+              value: selectedTheme,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedTheme = newValue!;
+                });
+              },
+              items: <String>['성급한', '느긋한', '차분한']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
             OutlinedButton(
                 onPressed: () async {
                   if (inputText.isEmpty) {
@@ -51,15 +80,26 @@ class AddState extends State<AddPage> {
                     );
                     return;
                   } else if (mounted) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        settings: const RouteSettings(name: "/translating"),
-                        builder: (context) => AnalyzingPage(
-                          id: widget.id,
-                          inputText: inputText,
+                    if (willTranslate) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          settings: const RouteSettings(name: "/translating"),
+                          builder: (context) => TranslatingPage(
+                            id: widget.id,
+                            inputText: inputText,
+                            todo: "번역중이에요..",
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        settings: const RouteSettings(name: "/processing"),
+                        builder: (context) => TranslatingPage(
+                            id: widget.id,
+                            inputText: inputText,
+                            todo: "처리중이에요.."),
+                      ));
+                    }
                   }
                 },
                 style: OutlinedButton.styleFrom(

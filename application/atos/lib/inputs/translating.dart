@@ -6,21 +6,23 @@ import 'package:atos/inputs/translated.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AnalyzingPage extends StatefulWidget {
-  const AnalyzingPage({
+class TranslatingPage extends StatefulWidget {
+  const TranslatingPage({
     super.key,
     required this.id,
     required this.inputText,
+    required this.todo,
   });
 
   final String id;
   final String inputText;
+  final String todo;
 
   @override
-  State<AnalyzingPage> createState() => AnalyzingState();
+  State<TranslatingPage> createState() => TranslatingState();
 }
 
-class AnalyzingState extends State<AnalyzingPage> {
+class TranslatingState extends State<TranslatingPage> {
   var region = '';
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
@@ -50,7 +52,6 @@ class AnalyzingState extends State<AnalyzingPage> {
   Future<void> _processRequest() async {
     try {
       final response = await http.post(
-        //Uri.parse('http://222.237.88.211:8000/translate-text'),
         Uri.parse('${ControlUri.BASE_URL}/translate-text'),
         body: json.encode({
           'text': widget.inputText,
@@ -94,8 +95,8 @@ class AnalyzingState extends State<AnalyzingPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text('번역중이에요'),
-              //Text(region),
+              Text(widget.todo),
+              SizedBox(height: 10),
               SizedBox(
                 width: 100, // 원하는 너비
                 height: 100, // 원하는 높이
