@@ -6,3 +6,5 @@ class GetTTSReqDTO(BaseModel):
     sex: str
     theme: str
 
+class GetTTSAudioDTO(BaseModel):
+    audio_path: str
