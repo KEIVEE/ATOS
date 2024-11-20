@@ -19,6 +19,7 @@ def process_and_save_filtered_audio(input_file_path, output_file_path = "server/
         pitch_values (numpy.ndarray): 피치 값 배열.
         time_steps (numpy.ndarray): 시간 단계 배열.
     """
+    
     output_file_path = input_file_path
 
     # 1. WAV 파일 로드
@@ -40,6 +41,8 @@ def process_and_save_filtered_audio(input_file_path, output_file_path = "server/
 
     # 3. 히스테리시스 필터 적용
     filtered_data = np.zeros_like(data, dtype=np.float32)
+    filtered_pitch_values = np.zeros_like(pitch_values)
+
     prev_in_range = False
 
     # 샘플 수로 변환
@@ -58,12 +61,14 @@ def process_and_save_filtered_audio(input_file_path, output_file_path = "server/
             end = min(len(data), index + extend_samples + silence_samples)
             filtered_data[start:end] = data[start:end]
 
+            filtered_pitch_values[i] = pitch_values[i] if in_range else 0
+
         prev_in_range = in_range
 
     # 4. 결과 WAV 파일 저장
     wav.write(output_file_path, sampling_rate, filtered_data.astype(np.int16))
 
     print(f"{output_file_path} 파일이 생성되었습니다.")
-    return sampling_rate, filtered_data, pitch_values, time_steps
+    return sampling_rate, filtered_data, filtered_pitch_values, time_steps
 
 # filtered_data : 진폭 샘플링 리스트
