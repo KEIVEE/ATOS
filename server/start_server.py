@@ -30,10 +30,28 @@ import whisperx
 if not firebase_admin._apps:  # 이미 초기화된 앱이 없으면 초기화
     server_init.init_server()
 
+SWAGGER_HEADERS = {
+    "title": "ATOS API List",
+    "version": "v593",
+    "description": "## ATOS API \n - 2024년도 2학기 \n - 중앙대학교 캡스톤 디자인(1) 프로젝트 \n - 사투리 억양 교정 앱",
+    "contact": {
+        "name": "ATOS",
+        "email": "atoscd593@gmail.com",
+    },
+}
+
 db = firestore.client()
-app = FastAPI()
+app = FastAPI(swagger_ui_parameters={
+        "deepLinking": True,
+        "displayRequestDuration": True,
+        "docExpansion": "none",
+        "operationsSorter": "method",
+        "filter": True,
+        "tagsSorter": "alpha",
+        "syntaxHighlight.theme": "tomorrow-night",
+    },
+    **SWAGGER_HEADERS)
 bucket = storage.bucket('atos-cd1.appspot.com')
-audio_blob_name = 'test_audio/'
 
 # 디비
 toTranslateText_db = db.collection('toTranslateText')
@@ -48,11 +66,7 @@ userPractice_db = db.collection('userPractice')
 async def startup_event():
     load_models()
 
-@app.get('/')
-def read_root():
-    return 'Server for ATOS project'
-
-@app.get('/login/{user_id}',description='로그인 기록 저장(로그인 후 호출하기)\n날짜별 하나만 저장 가능')
+@app.get('/login/{user_id}',description='로그인 기록 저장(로그인 후 호출하기)\n날짜별 하나만 저장 가능', tags=['User api'])
 async def login(user_id: str): 
     try:
         login_date = str(datetime.now().date())
@@ -73,7 +87,7 @@ async def login(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.get('/get-login-history/{user_id}',description='로그인 기록 조회')
+@app.get('/get-login-history/{user_id}',description='로그인 기록 조회', tags=['User api'])
 async def get_login_history(user_id: str):
     try:
         query = userConnection_db.where('user_id', '==', user_id).stream()
@@ -91,7 +105,7 @@ async def get_login_history(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.post('/set-user',description='사용자 정보 저장')
+@app.post('/set-user',description='사용자 정보 저장', tags=['User api'])
 async def set_user(request: UserDTO):
     try:
         user_save_dto = {
@@ -106,7 +120,7 @@ async def set_user(request: UserDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.get('/get-user/{user_id}',description='사용자 정보 조회')
+@app.get('/get-user/{user_id}',description='사용자 정보 조회', tags=['User api'])
 async def get_user(user_id: str):
     try:
         user = userData_db.document(user_id).get().to_dict()
@@ -114,10 +128,12 @@ async def get_user(user_id: str):
         if not user:
             raise HTTPException(status_code=404, detail="사용자 정보가 없습니다.")
         
+        return user
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성') 
+@app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성', tags=['TTS api']) 
 async def translate_text(request: TransTextDTO):
     try:
         text_save_dto = {
@@ -167,7 +183,7 @@ async def translate_text(request: TransTextDTO):
               200: {
                   "description": "음성 파일을 반환합니다.",
                   "content": {"audio/wav": {}}
-                  }})
+                  }}, tags=['TTS api'])
 async def get_tts(request: GetTTSReqDTO): 
     try:
         trans_text_save_dto = {
@@ -195,7 +211,7 @@ async def get_tts(request: GetTTSReqDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post('/get-tc-tts',description='타입캐스트 tts 생성')
+@app.post('/get-tc-tts',description='타입캐스트 tts 생성', tags=['TTS api'])
 async def get_tc_tts(request: GetTTSReqDTO):
     try:
         trans_text_save_dto = {
@@ -219,7 +235,7 @@ async def get_tc_tts(request: GetTTSReqDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post("/get-tts-audio/", description="TTS 음성 파일 조회 (앱에서 쓸 필요 없음)")
+@app.post("/get-tts-audio/", description="TTS 음성 파일 조회 (앱에서 쓸 필요 없음)", tags=['TTS api'])
 async def get_tts_audio(request: GetTTSAudioDTO):
     try:
         blob = bucket.blob(request.audio_path)
@@ -238,7 +254,7 @@ async def get_tts_audio(request: GetTTSAudioDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
     
-@app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회")
+@app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회", tags=['User api'])
 async def get_user_practice(user_id : str) :
     try:
         query = userPractice_db.where("user_id", "==", user_id).stream()
@@ -256,7 +272,7 @@ async def get_user_practice(user_id : str) :
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post("/save-user-practice", description="사용자의 연습 데이터 저장")
+@app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['TTS api'])
 async def save_user_practice(request: SavePracticeDTO):
     try:
         text = tempText_db.document(request.temp_id).get().to_dict().get('text')
@@ -292,7 +308,7 @@ async def save_user_practice(request: SavePracticeDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 
-@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환")
+@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'])
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
     try :
         temp_save_id = user_id + str(datetime.now().strftime("%Y%m%d%H%M%S"))
