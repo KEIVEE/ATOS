@@ -128,7 +128,14 @@ async def translate_text(request: TransTextDTO):
 
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
-        audio = tts.getTTS(translated_text)
+        audio
+        if request.theme == '성급한':
+            audio = tts.getTTS(translated_text, request.sex, speaking_rate=1.4)
+        elif request.theme == '느긋한':
+            audio = tts.getTTS(translated_text, request.sex, speaking_rate=1.0)
+        elif request.theme == '차분한':
+            audio = tctts.getTCTTS(request.text)
+        
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
         blob.upload_from_string(audio, content_type="audio/wav")
 
@@ -169,7 +176,7 @@ async def get_tts(request: GetTTSReqDTO):
         audio_stream1 = BytesIO(audio1)
         audio_stream1.seek(0)
 
-        return StreamingResponse(audio_stream1, media_type="audio/wav")
+        return audio_db_collection + translated_text_ref.id + audio_type
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
@@ -193,7 +200,7 @@ async def get_tc_tts(request: GetTTSReqDTO):
         audio_stream = BytesIO(audio)
         audio_stream.seek(0)
 
-        return StreamingResponse(audio_stream, media_type="audio/wav")
+        return audio_db_collection + translated_text_ref.id + audio_type
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")

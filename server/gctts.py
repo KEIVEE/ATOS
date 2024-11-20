@@ -1,16 +1,21 @@
 import google.cloud.texttospeech as texttospeech
 from server.settings import GC_TTS_KEY
 
-def getTTS(tts) :
+def getTTS(tts, sex, speaking_rate=1.2): 
     key_path = GC_TTS_KEY
     client = texttospeech.TextToSpeechClient.from_service_account_file(key_path)
 
     # TTS 요청을 위한 텍스트 입력 설정
     text_input = texttospeech.SynthesisInput(text=tts)
 
+    voice_model = 'ko-KR-Wavenet-A'
+
+    if sex == 'male':
+        voice_model = 'ko-KR-Wavenet-C'
+
     # 음성 구성 설정 (언어 코드와 목소리 유형 지정)
     voice = texttospeech.VoiceSelectionParams(
-        name="ko-KR-Wavenet-A",
+        name=voice_model,  
         language_code="ko-KR",  # 한국어
         ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL  # 중성적인 목소리
         )
@@ -18,7 +23,7 @@ def getTTS(tts) :
     # 오디오 설정 (출력 형식을 MP3로 지정)
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.LINEAR16,
-        speaking_rate=1.2
+        speaking_rate=speaking_rate
     )
 
     # TTS 요청 보내기

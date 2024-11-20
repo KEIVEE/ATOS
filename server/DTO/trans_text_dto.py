@@ -4,6 +4,8 @@ class TransTextDTO(BaseModel):
     text : str
     user_id : str
     region : str
+    theme : str
+    sex : str
 
 class TransTextReDTO(BaseModel):
     text_id: str
