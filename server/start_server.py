@@ -161,14 +161,14 @@ async def get_tts(request: GetTTSReqDTO):
 
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
-        audio = tts.getTTS(request.text)
+        audio1 = tts.getTTS(request.text)
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
-        blob.upload_from_string(audio, content_type="audio/wav")
+        blob.upload_from_string(audio1, content_type="audio/wav")
 
-        audio_stream = BytesIO(audio)
-        audio_stream.seek(0)
+        audio_stream1 = BytesIO(audio1)
+        audio_stream1.seek(0)
 
-        return StreamingResponse(audio_stream, media_type="audio/wav")
+        return StreamingResponse(audio_stream1, media_type="audio/wav")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
@@ -236,9 +236,8 @@ async def get_user_practice(user_id : str) :
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-
 @app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환")
-async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...)):
+async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
     try :
         upload_dir = "server/filtered_audio"
         os.makedirs(upload_dir, exist_ok=True)
