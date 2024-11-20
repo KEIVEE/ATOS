@@ -1,6 +1,7 @@
 import server.server_init as server_init
 import server.text_translate as tt
 import server.gctts as tts
+import server.tctts as tctts
 
 import firebase_admin
 from firebase_admin import firestore
@@ -39,6 +40,8 @@ userAudio_db = db.collection('userAudio')
 translatedText_db = db.collection('translatedText')
 userData_db = db.collection('userData')
 userConnection_db = db.collection('userConnection')
+
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -169,6 +172,51 @@ async def get_tts(request: GetTTSReqDTO):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.post('/get-tc-tts',description='타입캐스트 tts 생성')
+async def get_tc_tts(request: GetTTSReqDTO):
+    try:
+        trans_text_save_dto = {
+            'user_id': request.user_id,
+            'text': request.text
+        }
+        translated_text_ref = translatedText_db.document()
+        translated_text_ref.set(trans_text_save_dto)
+
+        audio_db_collection = 'tcTTS/'
+        audio_type = '.wav'
+        audio = tctts.getTCTTS(request.text)
+        blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
+        blob.upload_from_string(audio, content_type="audio/wav")
+
+        audio_stream = BytesIO(audio)
+        audio_stream.seek(0)
+
+        return StreamingResponse(audio_stream, media_type="audio/wav")
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-tts-audio/{audio_id}", description="TTS 음성 파일 조회")
+async def get_tts_audio(audio_id: str):
+    try:
+        audio_db_collection = 'tcTTS/'
+        audio_type = '.wav'
+        blob = bucket.blob(audio_db_collection + audio_id + audio_type)
+        audio = blob.download_as_string()
+
+        audio_stream = BytesIO(audio)
+        audio_stream.seek(0)
+
+        local_file_path = f"server/tts_audio/{audio_id}{audio_type}"
+        with open(local_file_path, "wb") as f:
+            f.write(audio)
+
+        return StreamingResponse(audio_stream, media_type="audio/wav")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
     
 @app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회")
 async def get_user_practice(user_id : str) :
