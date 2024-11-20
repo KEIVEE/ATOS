@@ -106,6 +106,16 @@ async def set_user(request: UserDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
+@app.get('/get-user/{user_id}',description='사용자 정보 조회')
+async def get_user(user_id: str):
+    try:
+        user = userData_db.document(user_id).get().to_dict()
+
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자 정보가 없습니다.")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성') 
 async def translate_text(request: TransTextDTO):
