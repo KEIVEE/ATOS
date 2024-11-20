@@ -44,11 +44,11 @@ db = firestore.client()
 app = FastAPI(swagger_ui_parameters={
         "deepLinking": True,
         "displayRequestDuration": True,
-        "docExpansion": "none",
+        "docExpansion": "list",
         "operationsSorter": "method",
         "filter": True,
         "tagsSorter": "alpha",
-        "syntaxHighlight.theme": "tomorrow-night",
+        "syntaxHighlight.theme": "solarized-dark",
     },
     **SWAGGER_HEADERS)
 bucket = storage.bucket('atos-cd1.appspot.com')
