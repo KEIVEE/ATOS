@@ -144,7 +144,7 @@ async def translate_text(request: TransTextDTO):
         elif request.theme == '느긋한':
             audio = tts.getTTS(translated_text, request.sex, speaking_rate=1.0)
         elif request.theme == '차분한':
-            audio = tctts.getTCTTS(request.text)
+            audio = tctts.getTCTTS(translated_text)
         
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
         blob.upload_from_string(audio, content_type="audio/wav")
@@ -179,12 +179,16 @@ async def get_tts(request: GetTTSReqDTO):
 
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
-        audio1 = tts.getTTS(request.text)
+        audio
+        if request.theme == '성급한':
+            audio = tts.getTTS(request.text, request.sex, speaking_rate=1.4)
+        elif request.theme == '느긋한':
+            audio = tts.getTTS(request.text, request.sex, speaking_rate=1.0)
+        elif request.theme == '차분한':
+            audio = tctts.getTCTTS(request.text)
+            
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
-        blob.upload_from_string(audio1, content_type="audio/wav")
-
-        audio_stream1 = BytesIO(audio1)
-        audio_stream1.seek(0)
+        blob.upload_from_string(audio, content_type="audio/wav")
 
         return audio_db_collection + translated_text_ref.id + audio_type
 

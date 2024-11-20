@@ -10,7 +10,7 @@ def getTTS(tts, sex, speaking_rate=1.2):
 
     voice_model = 'ko-KR-Wavenet-A'
 
-    if sex == 'male':
+    if sex == 'male' or sex == 'Male':
         voice_model = 'ko-KR-Wavenet-C'
 
     # 음성 구성 설정 (언어 코드와 목소리 유형 지정)
