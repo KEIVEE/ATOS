@@ -219,18 +219,16 @@ async def get_tc_tts(request: GetTTSReqDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/get-tts-audio/{audio_id}", description="TTS 음성 파일 조회")
-async def get_tts_audio(audio_id: str):
+@app.get("/get-tts-audio/{audio_path}", description="TTS 음성 파일 조회 (앱에서 쓸 필요 없음)")
+async def get_tts_audio(audio_path: str):
     try:
-        audio_db_collection = 'tcTTS/'
-        audio_type = '.wav'
-        blob = bucket.blob(audio_db_collection + audio_id + audio_type)
+        blob = bucket.blob(audio_path)
         audio = blob.download_as_string()
 
         audio_stream = BytesIO(audio)
         audio_stream.seek(0)
 
-        local_file_path = f"server/tts_audio/{audio_id}{audio_type}"
+        local_file_path = f"server/tts_audio/{audio_path.split('/')[-1]}"
         with open(local_file_path, "wb") as f:
             f.write(audio)
 
