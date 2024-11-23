@@ -177,6 +177,61 @@ async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(..
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.post('/set-user-low-pitch',description='사용자 피치 저장', tags=['User api'])
+async def set_user_pitch(low: UploadFile = File(...), user_id: str = Form(...)):
+    try:
+        upload_dir = "server/pitch_audio"
+        os.makedirs(upload_dir, exist_ok=True)
+        low_voice_path = os.path.join(upload_dir, low.filename)
+        with open(low_voice_path, "wb") as buffer:
+            shutil.copyfileobj(low.file, buffer)
+
+        low_pitch = get_pitch_median(low_voice_path)
+
+        low_pitch = max(50, low_pitch)
+
+        user_pitch_save_dto = {
+            'low_pitch': int(low_pitch)
+        }
+
+        user_pitch_ref = userData_db.document(user_id)
+        user_pitch_ref.update(user_pitch_save_dto)
+
+        os.remove(low_voice_path)
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
+@app.post('/set-user-high-pitch',description='사용자 피치 저장', tags=['User api'])
+async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...)):
+    try:
+        upload_dir = "server/pitch_audio"
+        os.makedirs(upload_dir, exist_ok=True)
+
+        high_voice_path = os.path.join(upload_dir, high.filename)
+        with open(high_voice_path, "wb") as buffer:
+            shutil.copyfileobj(high.file, buffer)
+
+        high_pitch = get_pitch_median(high_voice_path)
+
+        high_pitch = min(300, high_pitch)
+
+        user_pitch_save_dto = {
+            'high_pitch': int(high_pitch)
+        }
+
+        user_pitch_ref = userData_db.document(user_id)
+        user_pitch_ref.update(user_pitch_save_dto)
+
+        os.remove(high_voice_path)
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성', tags=['TTS api']) 
 async def translate_text(request: TransTextDTO):
