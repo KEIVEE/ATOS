@@ -115,8 +115,6 @@ class SettingState extends State<SettingPage> {
     await _recorder.openRecorder();
   }
 
-
-
   // 저음 녹음 시작
   Future<void> _startRecordingLow() async {
     final path = '${Directory.systemTemp.path}/new_low_pitch.wav';
@@ -208,20 +206,23 @@ class SettingState extends State<SettingPage> {
                 children: [
                   ElevatedButton(
                     onPressed: _isRecordingLow
-                        ? null
+                        ? () {
+                            _stopRecording();
+                            setState(() {}); // 녹음 중지 후 상태 업데이트
+                          }
                         : () {
                             _startRecordingLow();
-                            setState(() {});
+                            setState(() {}); // 녹음 시작 후 상태 업데이트
                           },
-                    child: Text(_isRecordingLow ? '녹음 중...' : '녹음하기'),
+                    child: Text(_isRecordingLow ? '녹음 그만하기' : '녹음하기'),
                   ),
                   ElevatedButton(
-                    onPressed: !_isRecordingLow
-                        ? () {
-                            sendLowPitchVoiceData();
+                    onPressed: !_isRecordingLow // 녹음이 중지되면 저장 버튼 활성화
+                        ? null
+                        : () {
+                            sendLowPitchVoiceData(); // 서버로 전송
                             Navigator.pop(context);
-                          }
-                        : null,
+                          },
                     child: Text('저장'),
                   ),
                   ElevatedButton(
@@ -253,20 +254,23 @@ class SettingState extends State<SettingPage> {
                 children: [
                   ElevatedButton(
                     onPressed: _isRecordingHigh
-                        ? null
+                        ? () {
+                            _stopRecording();
+                            setState(() {}); // 녹음 중지 후 상태 업데이트
+                          }
                         : () {
                             _startRecordingHigh();
-                            setState(() {});
+                            setState(() {}); // 녹음 시작 후 상태 업데이트
                           },
-                    child: Text(_isRecordingHigh ? '녹음 중...' : '녹음하기'),
+                    child: Text(_isRecordingHigh ? '녹음 그만하기' : '녹음하기'),
                   ),
                   ElevatedButton(
-                    onPressed: !_isRecordingHigh
-                        ? () {
-                            sendHighPitchVoiceData();
+                    onPressed: !_isRecordingHigh // 녹음이 중지되면 저장 버튼 활성화
+                        ? null
+                        : () {
+                            sendHighPitchVoiceData(); // 서버로 전송
                             Navigator.pop(context);
-                          }
-                        : null,
+                          },
                     child: Text('저장'),
                   ),
                   ElevatedButton(
@@ -289,87 +293,56 @@ class SettingState extends State<SettingPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: const Icon(Icons.arrow_back),
         ),
-        backgroundColor: Colors.white,
+        title: const Text('설정'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            const SizedBox(height: 20),
-            Text('설정', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-
-            const SizedBox(height: 20),
-            // 닉네임 수정
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextField(
-                controller: _nicknameController,
-                decoration: InputDecoration(
-                  labelText: '닉네임',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    newNickname = value;
-                  });
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          TextField(
+            controller: _nicknameController,
+            decoration: InputDecoration(
+              labelText: '닉네임',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (text) {
+              newNickname = text;
+            },
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _updateNickname,
+            child: Text('닉네임 변경'),
+          ),
+          const SizedBox(height: 16),
+          Text('현재 지역: $region'),
+          const SizedBox(height: 16),
+          Text('지역 설정:'),
+          Column(
+            children: regions.map((r) {
+              return ElevatedButton(
+                onPressed: () {
+                  _updateRegion(r);
                 },
-              ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _updateNickname,
-              child: Text('저장'),
-            ),
-            const SizedBox(height: 20),
-            // 지역 설정
-            Text('현재 지역: $region', style: TextStyle(fontSize: 18)),
-            ElevatedButton(
-              onPressed: () {
-                // 지역 변경 다이얼로그
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text('지역 변경'),
-                      content: DropdownButton<String>(
-                        value: region,
-                        onChanged: (newRegion) {
-                          if (newRegion != null) {
-                            _updateRegion(newRegion);
-                            Navigator.pop(context);
-                          }
-                        },
-                        items: regions
-                            .map((region) => DropdownMenuItem<String>(
-                                  value: region,
-                                  child: Text(region),
-                                ))
-                            .toList(),
-                      ),
-                    );
-                  },
-                );
-              },
-              child: Text('지역 변경'),
-            ),
-            const SizedBox(height: 20),
-            // 저음 및 고음 변경 버튼
-            ElevatedButton(
-              onPressed: _showLowPitchDialog,
-              child: Text('저음 변경하기'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _showHighPitchDialog,
-              child: Text('고음 변경하기'),
-            ),
-          ],
-        ),
+                child: Text(r),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _showLowPitchDialog,
+            child: Text('저음 변경하기'),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _showHighPitchDialog,
+            child: Text('고음 변경하기'),
+          ),
+        ],
       ),
     );
   }
