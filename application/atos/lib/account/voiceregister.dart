@@ -39,7 +39,7 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
   }
 
   Future<void> _startRecording(String pitch) async {
-    final path = '${Directory.systemTemp.path}/$pitch.wav';
+    final path = '${Directory.systemTemp.path}/pitch.wav';
     await _recorder.startRecorder(toFile: path);
     setState(() {
       if (pitch == 'low') {

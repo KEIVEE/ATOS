@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:atos/control/uri.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key, required this.id});
@@ -103,7 +104,14 @@ class SettingState extends State<SettingPage> {
   }
 
   Future<void> _initRecorder() async {
-    
+    var status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      // 권한 거부 처리
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('마이크 권한이 필요합니다.')),
+      );
+      return;
+    }
     await _recorder.openRecorder();
   }
 
@@ -111,7 +119,7 @@ class SettingState extends State<SettingPage> {
 
   // 저음 녹음 시작
   Future<void> _startRecordingLow() async {
-    final path = 'path_to_save_low_pitch.wav';
+    final path = '${Directory.systemTemp.path}/new_low_pitch.wav';
     await _recorder.startRecorder(toFile: path);
     setState(() {
       _isRecordingLow = true;
@@ -121,7 +129,7 @@ class SettingState extends State<SettingPage> {
 
   // 고음 녹음 시작
   Future<void> _startRecordingHigh() async {
-    final path = 'path_to_save_high_pitch.wav';
+    final path = '${Directory.systemTemp.path}/new_high_pitch.wav';
     await _recorder.startRecorder(toFile: path);
     setState(() {
       _isRecordingHigh = true;
