@@ -5,3 +5,4 @@ class SavePracticeDTO(BaseModel):
     temp_id: str
     title: str
     description: str
+

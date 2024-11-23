@@ -15,6 +15,7 @@ from server.DTO.set_user_dto import UserDTO, SetRegionDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
 from server.DTO.user_practice_dto import SavePracticeDTO
+from server.DTO.analysis_dto import AnalysisResult, VoiceAnalysisResponse
 
 from server.analysis import *
 
@@ -412,7 +413,7 @@ async def save_user_practice(request: SavePracticeDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'])
+@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'], response_model=VoiceAnalysisResponse)
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
     try :
         temp_save_id = user_id + str(datetime.now().strftime("%Y%m%d%H%M%S"))
