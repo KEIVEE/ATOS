@@ -453,7 +453,7 @@ async def save_user_practice(request: SavePracticeDTO):
 async def get_analysis_data(data_path: str):
     try:
         
-        blob3 = bucket.blob('temp/' + data_path + 'analysis.json.gz')
+        blob3 = bucket.blob('temp/' + data_path + '/analysis.json.gz')
         analysis_result = blob3.download_as_string()
 
         def iterfile():
