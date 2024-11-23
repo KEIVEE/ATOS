@@ -369,7 +369,7 @@ async def get_tts_audio(request: GetTTSAudioDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
     
-@app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회", tags=['User api'])
+@app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회", tags=['Practice api'])
 async def get_user_practice(user_id : str) :
     try:
         query = userPractice_db.where("user_id", "==", user_id).stream()
@@ -387,7 +387,7 @@ async def get_user_practice(user_id : str) :
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/get-user-practice-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['User api'])
+@app.get("/get-user-practice-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['Practice api'])
 async def get_user_practice_data(data_path: str):
     try:
         blob = bucket.blob(data_path + 'userVoice.wav')
@@ -410,7 +410,7 @@ async def get_user_practice_data(data_path: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['User api'])
+@app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['Practice api'])
 async def save_user_practice(request: SavePracticeDTO):
     try:
         text = tempText_db.document(request.temp_id).get().to_dict().get('text')
@@ -449,7 +449,7 @@ async def save_user_practice(request: SavePracticeDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/get-user-temp-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['User api'])
+@app.get("/get-user-temp-data/{data_path}", description="사용자의 분석 데이터 return. 분석 결과를 압축한 gzip파일 리턴", tags=['Analysis api'])
 async def get_user_practice_data(data_path: str):
     try:
         
