@@ -448,7 +448,28 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         os.remove(user_voice_path)
         os.remove(tts_voice_path)
 
-        result = '성공'
+        result = {
+            'temp_save_id': temp_save_id,
+            'result': {
+                'word_intervals': word_intervals,
+                'tts_word_intervals': tts_word_intervals,
+                'user_exceeding_words': user_exceeding_words,
+                'tts_exceeding_words': tts_exceeding_words,
+                'max_word': max_word,
+                'u_results': u_results,
+                't_results': t_results,
+                'highest_segment': highest_segment,
+                'lowest_segment': lowest_segment,
+                'tts_data': tts_data.tolist(),
+                'filtered_data': filtered_data.tolist(),
+                'sampling_rate': sampling_rate,
+                'tts_sampling_rate': tts_sampling_rate,
+                'pitch_values': pitch_values,
+                'time_steps': time_steps,
+                'pitch_values_tts': pitch_values_tts,
+                'time_steps_tts': time_steps_tts
+            }
+        }
 
         # result 구성 요소
         # 1. 보정된 timestamp (json 형식)
