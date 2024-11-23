@@ -307,7 +307,7 @@ async def get_user_practice(user_id : str) :
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['TTS api'])
+@app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['User api'])
 async def save_user_practice(request: SavePracticeDTO):
     try:
         text = tempText_db.document(request.temp_id).get().to_dict().get('text')
