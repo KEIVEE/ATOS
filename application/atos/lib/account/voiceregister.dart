@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
@@ -44,11 +43,11 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     await _recorder.startRecorder(toFile: path);
     setState(() {
       if (pitch == 'low') {
-        _isRecordingLow = true;
-        _lowPitchPath = path;
+      _isRecordingLow = true;
+      _lowPitchPath = path;
       } else {
-        _isRecordingHigh = true;
-        _highPitchPath = path;
+      _isRecordingHigh = true;
+      _highPitchPath = path;
       }
     });
   }
@@ -57,9 +56,9 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     await _recorder.stopRecorder();
     setState(() {
       if (pitch == 'low') {
-        _isRecordingLow = false;
+      _isRecordingLow = false;
       } else {
-        _isRecordingHigh = false;
+      _isRecordingHigh = false;
       }
     });
   }
