@@ -569,7 +569,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         def iterfile():
             gzip_buffer.seek(0)
             yield from gzip_buffer
-        return StreamingResponse(iterfile(), media_type="application/json", headers={"Content-Encoding": "gzip"})
+        return StreamingResponse(iterfile(), media_type="application/gzip", headers={"Content-Encoding": "gzip"})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
