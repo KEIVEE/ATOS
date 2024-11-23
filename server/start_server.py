@@ -8,7 +8,7 @@ from firebase_admin import firestore
 from firebase_admin import storage
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from io import BytesIO
 
 from server.DTO.set_user_dto import UserDTO, SetRegionDTO
@@ -527,7 +527,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         # 1. 보정된 timestamp (json 형식)
         # 2. 사용자 음성과 TTS 음성의 세기 차이가 큰 단어 (json 형식)
         # 3. temp_save_id (string) ==> 나중에 저장 시 사용
-        return result
+        return JSONResponse(content=result, headers={"Content-Encoding": "gzip"})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
