@@ -15,7 +15,7 @@ from server.DTO.set_user_dto import UserDTO, SetRegionDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
 from server.DTO.user_practice_dto import SavePracticeDTO
-from server.DTO.analysis_dto import AnalysisResult, VoiceAnalysisResponse
+from server.DTO.analysis_dto import AnalysisResult, VoiceAnalysisResponse, VoiceAnalysisResponse2
 from server.DTO.login_dto import LoginHistoryResDTO
 
 from server.analysis import *
@@ -449,7 +449,7 @@ async def save_user_practice(request: SavePracticeDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'], response_model=VoiceAnalysisResponse)
+@app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'], response_model=VoiceAnalysisResponse2)
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
     try :
         temp_save_id = user_id + str(datetime.now().strftime("%Y%m%d%H%M%S"))
@@ -566,10 +566,14 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         blob = bucket.blob(f"{temp_db_collection}analysis.json.gz")
         blob.upload_from_file(gzip_buffer, content_type="application/gzip")
 
-        def iterfile():
-            gzip_buffer.seek(0)
-            yield from gzip_buffer
-        return StreamingResponse(iterfile(), media_type="application/gzip", headers={"Content-Encoding": "gzip"})
+        response = {
+            'temp_id': temp_save_id
+        }
+        # def iterfile():
+        #     gzip_buffer.seek(0)
+        #     yield from gzip_buffer
+        # StreamingResponse(iterfile(), media_type="application/gzip", headers={"Content-Encoding": "gzip"})
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")

@@ -24,3 +24,6 @@ class AnalysisResult(BaseModel):
 class VoiceAnalysisResponse(BaseModel):
     temp_id: str
     result: AnalysisResult
+
+class VoiceAnalysisResponse2(BaseModel):
+    temp_id: str
