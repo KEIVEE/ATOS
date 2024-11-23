@@ -24,6 +24,8 @@ from server.timestamp_cal import ts_cal
 
 from datetime import datetime
 import concurrent.futures
+import gzip
+import json
 
 import os
 import shutil
@@ -526,6 +528,15 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
                 'results': results
             }
         }
+
+        gzip_buffer = BytesIO()
+        with gzip.GzipFile(fileobj=gzip_buffer, mode='w') as f:
+            f.write(json.dumps(result).encode('utf-8'))
+
+        # Gzip 파일을 Firebase Storage에 업로드
+        gzip_buffer.seek(0)
+        blob = bucket.blob(temp_db_collection+"analysis.json.gz")
+        blob.upload_from_file(gzip_buffer, content_type="application/gzip")
 
         # result 구성 요소
         # 1. 보정된 timestamp (json 형식)
