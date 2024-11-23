@@ -462,8 +462,8 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             raise HTTPException(status_code=404, detail="User not found")
 
         user_data = user_doc.to_dict()
-        low = user_data.get('low_pitch')
-        high = user_data.get('high_pitch')
+        low = min(user_data.get('low_pitch'),user_data.get('high_pitch'))
+        high = max(user_data.get('low_pitch'),user_data.get('high_pitch'))
 
         sampling_rate, filtered_data, pitch_values, time_steps = process_and_save_filtered_audio(input_file_path=user_voice_path, human_voice_range=(low-10, high+10))
 
