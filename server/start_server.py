@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 
-from server.DTO.set_user_dto import UserDTO
+from server.DTO.set_user_dto import UserDTO, SetRegionDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
 from server.DTO.user_practice_dto import SavePracticeDTO
@@ -101,6 +101,16 @@ async def get_login_history(user_id: str):
             raise HTTPException(status_code=404, detail="로그인 기록이 없습니다.")
 
         return login_history
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+
+@app.post('/set-user-region',description='사용자 지역 정보 변경', tags=['User api'])
+async def set_user_region(request: SetRegionDTO):
+    try:
+        user_ref = userData_db.document(request.user_id)
+        user_ref.update({'region': request.region})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")

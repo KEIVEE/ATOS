@@ -5,3 +5,6 @@ class UserDTO(BaseModel):
     region: str
     sex: str
 
+class SetRegionDTO(BaseModel):
+    user_id: str
+    region: str
