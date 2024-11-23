@@ -270,6 +270,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_fft:
+    dependency: "direct main"
+    description:
+      name: flutter_fft
+      sha256: f2701ea4da2a42cbc6dbb14b0872a6b77056901e34ed7576e2fefbf557b4f353
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2+6"
   flutter_lints:
     dependency: "direct dev"
     description:

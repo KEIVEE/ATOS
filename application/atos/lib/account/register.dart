@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:atos/account/voiceregister.dart';
 import 'package:http/http.dart' as http;
 
 class RegisterPage extends StatefulWidget {
@@ -25,7 +26,7 @@ class RegisterState extends State<RegisterPage> {
   var registerTried = false;
   final regions = ['경상도', '전라도', '충청도', '강원도', '제주도'];
   String selectedGender = "male"; // 성별을 저장할 변수 (기본값: 남성)
-
+  
   Map<String, String> headers = {
     'Content-Type': 'application/json',
   };
@@ -95,7 +96,13 @@ class RegisterState extends State<RegisterPage> {
       //_auth.currentUser?.updatePhotoURL(region);
 
       if (mounted) {
-        Navigator.pop(context); // 성공적으로 회원가입이 완료되면 뒤로 이동
+        //Navigator.pop(context); // 성공적으로 회원가입이 완료되면 뒤로 이동
+        Navigator.of(context).push(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: "/voiceRegister"),
+                    builder: (context) => VoiceRegisterPage(id: id),
+                  ),
+                );
       }
     } catch (e) {
       setState(() {
