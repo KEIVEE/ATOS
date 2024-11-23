@@ -35,7 +35,7 @@ if not firebase_admin._apps:  # 이미 초기화된 앱이 없으면 초기화
 SWAGGER_HEADERS = {
     "title": "ATOS API List",
     "version": "v593",
-    "description": "## ATOS API \n - 2024년도 2학기 \n - 중앙대학교 캡스톤 디자인(1) 프로젝트 \n - 사투리 억양 교정 앱",
+    "description": "## ATOS API \n - 2024년도 2학기 \n - 중앙대학교 캡스톤 디자인(1)\n - 사투리 억양 교정 앱 프로젝트",
     "contact": {
         "name": "ATOS",
         "email": "atoscd593@gmail.com",
