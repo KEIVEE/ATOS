@@ -16,10 +16,12 @@ class TranslatedPage extends StatefulWidget {
       {super.key,
       required this.id,
       required this.translatedText,
-      required this.audioName});
+      required this.audioName,
+      required this.translate});
   final String id;
   final String translatedText;
   final String audioName;
+  final bool translate;
 
   @override
   State<TranslatedPage> createState() => _TranslatedState();
@@ -203,10 +205,12 @@ class _TranslatedState extends State<TranslatedPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             const SizedBox(height: 20),
-            const Text(
-              '변환된 문장이에요',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+
+            if (widget.translate)
+              const Text(
+                '번역된 문장이에요',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             const SizedBox(height: 10),
             Text(
               widget.translatedText,

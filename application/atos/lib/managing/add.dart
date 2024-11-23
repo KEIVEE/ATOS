@@ -53,7 +53,7 @@ class AddState extends State<AddPage> {
                     });
                   },
                 ),
-                const Text('번역하지 않음'),
+                const Text('번역할 거에요'),
               ],
             ),
             DropdownButton<String>(
@@ -88,6 +88,7 @@ class AddState extends State<AddPage> {
                             id: widget.id,
                             inputText: inputText,
                             todo: "번역중이에요..",
+                            theme: selectedTheme,
                           ),
                         ),
                       );
@@ -97,7 +98,8 @@ class AddState extends State<AddPage> {
                         builder: (context) => TranslatingPage(
                             id: widget.id,
                             inputText: inputText,
-                            todo: "처리중이에요.."),
+                            todo: "처리중이에요..",
+                            theme: selectedTheme),
                       ));
                     }
                   }
