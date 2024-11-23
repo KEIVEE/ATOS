@@ -47,7 +47,7 @@ dependencies:
   firebase_storage:
   dio:
   
-  flutter_fft: 
+  #flutter_fft: 
   
 dev_dependencies:
   flutter_test:

@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 
 class VoiceRegisterPage extends StatefulWidget {
   final String id;
@@ -27,44 +28,52 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
   }
 
   Future<void> _initRecorder() async {
+    var status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      // 권한 거부 처리
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('마이크 권한이 필요합니다.')),
+      );
+      return;
+    }
     await _recorder.openRecorder();
   }
 
-  Future<void> _startRecordingLow() async {
-    final path = 'path_to_save_low_pitch.wav';
+  Future<void> _startRecording(String pitch) async {
+    final path = '${Directory.systemTemp.path}/$pitch.wav';
     await _recorder.startRecorder(toFile: path);
     setState(() {
-      _isRecordingLow = true;
-      _lowPitchPath = path;
+      if (pitch == 'low') {
+        _isRecordingLow = true;
+        _lowPitchPath = path;
+      } else {
+        _isRecordingHigh = true;
+        _highPitchPath = path;
+      }
     });
   }
 
-  Future<void> _startRecordingHigh() async {
-    final path = 'path_to_save_high_pitch.wav';
-    await _recorder.startRecorder(toFile: path);
-    setState(() {
-      _isRecordingHigh = true;
-      _highPitchPath = path;
-    });
-  }
-
-  Future<void> _stopRecording() async {
+  Future<void> _stopRecording(String pitch) async {
     await _recorder.stopRecorder();
     setState(() {
-      _isRecordingLow = false;
-      _isRecordingHigh = false;
+      if (pitch == 'low') {
+        _isRecordingLow = false;
+      } else {
+        _isRecordingHigh = false;
+      }
     });
   }
 
   Future<void> _sendVoiceData() async {
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('${ControlUri.BASE_URL}/set-user-pitch'), // 서버 API URL
+      Uri.parse('${ControlUri.BASE_URL}/set-user-pitch'),
     );
 
     // Add files
     request.files.add(await http.MultipartFile.fromPath('low', _lowPitchPath));
-    request.files.add(await http.MultipartFile.fromPath('high', _highPitchPath));
+    request.files
+        .add(await http.MultipartFile.fromPath('high', _highPitchPath));
 
     // Add user ID as field
     request.fields['user_id'] = widget.id;
@@ -72,11 +81,17 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     try {
       final response = await request.send();
       if (response.statusCode == 200) {
-        // 성공적으로 음성 파일 전송
-        print('Voice data uploaded successfully');
-        // 서버 응답에 따라 추가 동작 처리 가능
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('회원가입 성공. 로그인 해 주세요.')),
+        );
       } else {
-        print('Error uploading voice data');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('음성 데이터 업로드 중 오류가 발생했습니다.')),
+        );
+      }
+
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {
       print('Error: $e');
@@ -94,20 +109,25 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('음성 등록'),
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // 저음 입력하기 버튼
+            // 저음 입력 버튼
             ElevatedButton(
-              onPressed: _isRecordingLow ? null : _startRecordingLow,
-              child: Text(_isRecordingLow ? '녹음 중...' : '저음 입력하기'),
+              onPressed: _isRecordingLow
+                  ? () => _stopRecording('low')
+                  : () => _startRecording('low'),
+              child: Text(_isRecordingLow ? '녹음 끝내기' : '저음 입력하기'),
             ),
-            // 고음 입력하기 버튼
+            // 고음 입력 버튼
             ElevatedButton(
-              onPressed: _isRecordingHigh ? null : _startRecordingHigh,
-              child: Text(_isRecordingHigh ? '녹음 중...' : '고음 입력하기'),
+              onPressed: _isRecordingHigh
+                  ? () => _stopRecording('high')
+                  : () => _startRecording('high'),
+              child: Text(_isRecordingHigh ? '녹음 끝내기' : '고음 입력하기'),
             ),
             // 확인 버튼 (녹음된 파일을 서버로 전송)
             ElevatedButton(
