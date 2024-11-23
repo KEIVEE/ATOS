@@ -449,8 +449,8 @@ async def save_user_practice(request: SavePracticeDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/get-user-temp-data/{data_path}", description="사용자의 분석 데이터 return. 분석 결과를 압축한 gzip파일 리턴", tags=['Analysis api'])
-async def get_user_practice_data(data_path: str):
+@app.get("/get-analysis-data/{data_path}", description="temp에서 사용자의 분석 데이터 return. 분석 결과를 압축한 gzip파일 리턴", tags=['Analysis api'])
+async def get_analysis_data(data_path: str):
     try:
         
         blob3 = bucket.blob(data_path + 'analysis.json.gz')
