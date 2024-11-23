@@ -16,6 +16,7 @@ from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
 from server.DTO.user_practice_dto import SavePracticeDTO
 from server.DTO.analysis_dto import AnalysisResult, VoiceAnalysisResponse
+from server.DTO.login_dto import LoginHistoryResDTO
 
 from server.analysis import *
 
@@ -89,7 +90,7 @@ async def login(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-@app.get('/get-login-history/{user_id}',description='로그인 기록 조회', tags=['User api'])
+@app.get('/get-login-history/{user_id}',description='로그인 기록 조회', tags=['User api'], response_model=LoginHistoryResDTO)
 async def get_login_history(user_id: str):
     try:
         query = userConnection_db.where('user_id', '==', user_id).stream()
@@ -101,8 +102,13 @@ async def get_login_history(user_id: str):
 
         if not login_history:
             raise HTTPException(status_code=404, detail="로그인 기록이 없습니다.")
+        
+        response = {
+            'login_history': login_history,
+            'login_count': len(login_history)
+        }
 
-        return login_history
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
