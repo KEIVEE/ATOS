@@ -448,6 +448,23 @@ async def save_user_practice(request: SavePracticeDTO):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-user-temp-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['User api'])
+async def get_user_practice_data(data_path: str):
+    try:
+        
+        blob3 = bucket.blob(data_path + 'analysis.json.gz')
+        analysis_result = blob3.download_as_string()
+
+        def iterfile():
+            buffer = BytesIO(analysis_result)
+            buffer.seek(0)
+            yield from buffer
+        
+        return StreamingResponse(iterfile(), media_type="application/gzip", headers={"Content-Encoding": "gzip"})
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'], response_model=VoiceAnalysisResponse2)
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
