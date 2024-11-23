@@ -63,9 +63,6 @@ def compare_pitch_differences(user_timestamps, user_pitch_values, tts_timestamps
         else:
             result = 0
 
-        results.append(
-
-            result                    # 결과
-        )
+        results.append(result)
 
     return results
