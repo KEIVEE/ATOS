@@ -8,7 +8,7 @@ from firebase_admin import firestore
 from firebase_admin import storage
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from io import BytesIO
 
 from server.DTO.set_user_dto import UserDTO, SetRegionDTO
@@ -453,15 +453,11 @@ async def save_user_practice(request: SavePracticeDTO):
 async def get_analysis_data(data_path: str):
     try:
         
-        blob3 = bucket.blob('temp/' + data_path + '/analysis.json.gz')
+        blob3 = bucket.blob('temp/' + data_path + '/analysis.json')
         analysis_result = blob3.download_as_string()
 
-        def iterfile():
-            buffer = BytesIO(analysis_result)
-            buffer.seek(0)
-            yield from buffer
-        
-        return StreamingResponse(iterfile(), media_type="application/gzip", headers={"Content-Encoding": "gzip"})
+        return Response(content=analysis_result, media_type="application/json")
+        #return StreamingResponse(iterfile(), media_type="application/gzip", headers={"Content-Encoding": "gzip"})
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
@@ -574,14 +570,14 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             }
         }
 
-        gzip_buffer = BytesIO()
-        with gzip.GzipFile(fileobj=gzip_buffer, mode='w') as f:
-            f.write(json.dumps(result).encode('utf-8'))
-
+        # gzip_buffer = BytesIO()
+        # with gzip.GzipFile(fileobj=gzip_buffer, mode='w') as f:
+        #     f.write(json.dumps(result).encode('utf-8'))
+        json_str = json.dumps(result)
         # Gzip 파일을 Firebase Storage에 업로드
-        gzip_buffer.seek(0)
-        blob = bucket.blob(f"{temp_db_collection}analysis.json.gz")
-        blob.upload_from_file(gzip_buffer, content_type="application/gzip")
+        # gzip_buffer.seek(0)
+        blob = bucket.blob(f"{temp_db_collection}analysis.json")
+        blob.upload_from_string(json_str, content_type="application/json")
 
         response = {
             'temp_id': temp_save_id
