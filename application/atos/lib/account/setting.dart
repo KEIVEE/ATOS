@@ -48,13 +48,15 @@ class SettingState extends State<SettingPage> {
     User? user = _auth.currentUser;
     if (user != null) {
       final response = await http.post(
-        Uri.parse('${ControlUri.BASE_URL}/'), // 실제 서버 URL로 변경
+        Uri.parse('${ControlUri.BASE_URL}/set-user-region'), // 실제 서버 URL로 변경
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'user_id': user.uid,
+          'user_id': widget.id,
           'region': newRegion,
         }),
       );
+
+      debugPrint(response.body);
 
       if (response.statusCode == 200) {
         setState(() {
@@ -120,33 +122,31 @@ class SettingState extends State<SettingPage> {
                   builder: (context) {
                     return AlertDialog(
                       title: Text('지역 변경하기'),
-                      content: DropdownButton<String>(
-                        value: region,
-                        items: regions.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
+                      content: StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setState) {
+                          return DropdownButton(
+                            value: region,
+                            items: regions
+                                .map((e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                region = value!;
+                              });
+                            },
                           );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            region = newValue!;
-                          });
                         },
                       ),
                       actions: <Widget>[
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context); // 다이얼로그 닫기
+                            _updateRegion(region);
+                            Navigator.pop(context);
                           },
-                          child: Text('취소'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            _updateRegion(region); // 지역 업데이트
-                            Navigator.pop(context); // 다이얼로그 닫기
-                          },
-                          child: Text('저장'),
+                          child: Text('확인'),
                         ),
                       ],
                     );

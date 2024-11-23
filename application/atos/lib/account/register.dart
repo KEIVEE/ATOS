@@ -187,11 +187,7 @@ class RegisterState extends State<RegisterPage> {
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  if (newValue == '남성') {
-                    selectedGender = "male";
-                  } else if (newValue == '여성') {
-                    selectedGender = "female";
-                  }
+                  selectedGender = newValue!;
                 });
               },
             ),
