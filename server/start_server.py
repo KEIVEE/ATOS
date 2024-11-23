@@ -490,6 +490,8 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
         )
 
+        results = compare_pitch_differences(word_intervals, pitch_values, tts_word_intervals, pitch_values_tts,time_steps,time_steps_tts, threshold=20)
+     
         # 파일 삭제
         os.remove(user_voice_path)
         os.remove(tts_voice_path)
@@ -513,7 +515,8 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
                 'pitch_values': pitch_values.tolist(),
                 'time_steps': time_steps.tolist(),
                 'pitch_values_tts': pitch_values_tts.tolist(),
-                'time_steps_tts': time_steps_tts.tolist()
+                'time_steps_tts': time_steps_tts.tolist(),
+                'results': results
             }
         }
 
