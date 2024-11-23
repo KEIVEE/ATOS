@@ -33,6 +33,9 @@ class SettingState extends State<SettingPage> {
   bool _isRecordingHigh = false;
   String _lowPitchPath = '';
   String _highPitchPath = '';
+  bool lowTried = false;
+  bool highTried = false;
+  bool nicknameVacant = true;
 
   @override
   void initState() {
@@ -99,8 +102,12 @@ class SettingState extends State<SettingPage> {
       await user.updateDisplayName(newNickname);
       setState(() {
         _nicknameController.text = newNickname;
+        nicknameVacant = true;
       });
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('닉네임이 변경되었습니다.')),
+    );
   }
 
   Future<void> _initRecorder() async {
@@ -118,30 +125,39 @@ class SettingState extends State<SettingPage> {
   // 저음 녹음 시작
   Future<void> _startRecordingLow() async {
     final path = '${Directory.systemTemp.path}/new_low_pitch.wav';
-    await _recorder.startRecorder(toFile: path);
     setState(() {
       _isRecordingLow = true;
       _lowPitchPath = path;
     });
+    await _recorder.startRecorder(toFile: path);
   }
 
   // 고음 녹음 시작
   Future<void> _startRecordingHigh() async {
     final path = '${Directory.systemTemp.path}/new_high_pitch.wav';
-    await _recorder.startRecorder(toFile: path);
     setState(() {
       _isRecordingHigh = true;
       _highPitchPath = path;
     });
+    await _recorder.startRecorder(toFile: path);
   }
 
   // 녹음 중지
-  Future<void> _stopRecording() async {
-    await _recorder.stopRecorder();
+  Future<void> _stopLowRecording() async {
     setState(() {
       _isRecordingLow = false;
-      _isRecordingHigh = false;
+      lowTried = true;
     });
+    await _recorder.stopRecorder();
+  }
+
+  // 녹음 중지
+  Future<void> _stopHighRecording() async {
+    setState(() {
+      _isRecordingHigh = false;
+      highTried = true;
+    });
+    await _recorder.stopRecorder();
   }
 
   // 저음 데이터 서버로 전송
@@ -208,7 +224,7 @@ class SettingState extends State<SettingPage> {
                   ElevatedButton(
                     onPressed: _isRecordingLow
                         ? () {
-                            _stopRecording();
+                            _stopLowRecording();
                             setState(() {}); // 녹음 중지 후 상태 업데이트
                           }
                         : () {
@@ -218,7 +234,7 @@ class SettingState extends State<SettingPage> {
                     child: Text(_isRecordingLow ? '녹음 그만하기' : '녹음하기'),
                   ),
                   ElevatedButton(
-                    onPressed: !_isRecordingLow // 녹음이 중지되면 저장 버튼 활성화
+                    onPressed: !lowTried // 녹음이 중지되면 저장 버튼 활성화
                         ? null
                         : () {
                             sendLowPitchVoiceData(); // 서버로 전송
@@ -256,7 +272,7 @@ class SettingState extends State<SettingPage> {
                   ElevatedButton(
                     onPressed: _isRecordingHigh
                         ? () {
-                            _stopRecording();
+                            _stopHighRecording();
                             setState(() {}); // 녹음 중지 후 상태 업데이트
                           }
                         : () {
@@ -266,7 +282,7 @@ class SettingState extends State<SettingPage> {
                     child: Text(_isRecordingHigh ? '녹음 그만하기' : '녹음하기'),
                   ),
                   ElevatedButton(
-                    onPressed: !_isRecordingHigh // 녹음이 중지되면 저장 버튼 활성화
+                    onPressed: !highTried // 녹음이 중지되면 저장 버튼 활성화
                         ? null
                         : () {
                             sendHighPitchVoiceData(); // 서버로 전송
@@ -311,12 +327,18 @@ class SettingState extends State<SettingPage> {
               border: OutlineInputBorder(),
             ),
             onChanged: (text) {
-              newNickname = text;
+              setState(() {
+                newNickname = text;
+                nicknameVacant = false;
+                if (text == "") {
+                  nicknameVacant = true;
+                }
+              });
             },
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: _updateNickname,
+            onPressed: nicknameVacant ? null : _updateNickname,
             child: Text('닉네임 변경'),
           ),
           const SizedBox(height: 16),
