@@ -177,7 +177,8 @@ class SettingState extends State<SettingPage> {
       Uri.parse('${ControlUri.BASE_URL}/set-user-high-pitch'), // 고음 전송 URL
     );
 
-    request.files.add(await http.MultipartFile.fromPath('high', _highPitchPath));
+    request.files
+        .add(await http.MultipartFile.fromPath('high', _highPitchPath));
     request.fields['user_id'] = widget.id;
 
     try {
@@ -321,16 +322,34 @@ class SettingState extends State<SettingPage> {
           const SizedBox(height: 16),
           Text('현재 지역: $region'),
           const SizedBox(height: 16),
-          Text('지역 설정:'),
-          Column(
-            children: regions.map((r) {
-              return ElevatedButton(
-                onPressed: () {
-                  _updateRegion(r);
+          ElevatedButton(
+            onPressed: () {
+              // 지역 변경 다이얼로그
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text('지역 변경'),
+                    content: DropdownButton<String>(
+                      value: region,
+                      onChanged: (newRegion) {
+                        if (newRegion != null) {
+                          _updateRegion(newRegion);
+                          Navigator.pop(context);
+                        }
+                      },
+                      items: regions
+                          .map((region) => DropdownMenuItem<String>(
+                                value: region,
+                                child: Text(region),
+                              ))
+                          .toList(),
+                    ),
+                  );
                 },
-                child: Text(r),
               );
-            }).toList(),
+            },
+            child: Text('지역 변경'),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
