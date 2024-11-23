@@ -14,12 +14,12 @@ def load_models(model_size="medium", device='cuda', compute_type="float16"):
     if model is None:
         # Whisper 모델 로드
         model = whisperx.load_model(model_size, device, compute_type=compute_type, language="ko")
-        print("Whisper 모델 로드 완료")
+        #print("Whisper 모델 로드 완료")
 
     if model_a is None or metadata is None:
         # Whisper 정렬 모델 로드
         model_a, metadata = whisperx.load_align_model(language_code="ko", device=device)
-        print("Whisper 정렬 모델 로드 완료")
+        #print("Whisper 정렬 모델 로드 완료")
 
 def extract_word_timestamps(audio_file, model_size="large-v2", device='cuda', batch_size=16, compute_type="float16"):
 

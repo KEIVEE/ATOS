@@ -22,5 +22,5 @@ class AnalysisResult(BaseModel):
     results: List[int]
 
 class VoiceAnalysisResponse(BaseModel):
-    temp_save_id: str
+    temp_id: str
     result: AnalysisResult

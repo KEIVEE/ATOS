@@ -498,7 +498,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         os.remove(tts_voice_path)
 
         result = {
-            'temp_save_id': temp_save_id,
+            'temp_id': temp_save_id,
             'result': {
                 'word_intervals': word_intervals,
                 'tts_word_intervals': tts_word_intervals,
