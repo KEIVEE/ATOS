@@ -21,6 +21,7 @@ from server.analysis import *
 from server.timestamp_cal import ts_cal
 
 from datetime import datetime
+import concurrent.futures
 
 import os
 import shutil
@@ -281,7 +282,7 @@ async def translate_text(request: TransTextDTO):
 @app.post("/get-tts", description="번역하지 않고 tts만 생성.",
           responses={
               200: {
-                  "description": "음성 파일을 반환합니다.",
+                  "description": "음성 파일 경로를 반환합니다.",
                   "content": {"audio/wav": {}}
                   }}, tags=['TTS api'])
 async def get_tts(request: GetTTSReqDTO): 
@@ -467,8 +468,18 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         word_intervals = cal_timestamp(extract_word_timestamps(user_voice_path))
         tts_word_intervals = extract_word_timestamps(tts_voice_path)
 
-        word_intervals = ts_cal(word_intervals, text)
-        tts_word_intervals = ts_cal(tts_word_intervals, text)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            print("============멀티스레딩 진입============")
+            future_word_intervals = executor.submit(ts_cal, word_intervals, text)
+            future_tts_word_intervals = executor.submit(ts_cal, tts_word_intervals, text)
+
+            word_intervals = future_word_intervals.result()
+            tts_word_intervals = future_tts_word_intervals.result()
+
+        #word_intervals = ts_cal(word_intervals, text)
+        #tts_word_intervals = ts_cal(tts_word_intervals, text)
+        print(word_intervals)
+        print(tts_word_intervals)
 
         threshold_value = 5600
         user_exceeding_words, tts_exceeding_words, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
@@ -501,10 +512,10 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
                 'filtered_data': filtered_data.tolist(),
                 'sampling_rate': sampling_rate,
                 'tts_sampling_rate': tts_sampling_rate,
-                'pitch_values': pitch_values,
-                'time_steps': time_steps,
-                'pitch_values_tts': pitch_values_tts,
-                'time_steps_tts': time_steps_tts
+                'pitch_values': pitch_values.tolist(),
+                'time_steps': time_steps.tolist(),
+                'pitch_values_tts': pitch_values_tts.tolist(),
+                'time_steps_tts': time_steps_tts.tolist()
             }
         }
 
