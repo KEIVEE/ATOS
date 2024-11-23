@@ -466,48 +466,20 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
 
         word_intervals = cal_timestamp(extract_word_timestamps(user_voice_path))
         tts_word_intervals = extract_word_timestamps(tts_voice_path)
-        print("=============타임스탬프 추출 완료=============")
 
         word_intervals = ts_cal(word_intervals, text)
         tts_word_intervals = ts_cal(tts_word_intervals, text)
-        print("=============타임스탬프 보정 완료=============")
 
         threshold_value = 5600
         user_exceeding_words, tts_exceeding_words, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
 
-        print("=================================================================================")
-        print("user_exceeding_words : ")
-        print(user_exceeding_words)
-        print("=================================================================================")
-        print("tts_exceeding_words : ")
-        print(tts_exceeding_words)
-        print("=================================================================================")
-        print("max_word : ")
-        print(max_word)
-        print("=================================================================================\n\n\n")
-
         u_results,t_results = calculate_pitch_differences(
         word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
-
-        print("=================================================================================")
-        print("u_results : ")
-        print(u_results)
-        print("=================================================================================")
-        print("t_results : ")
-        print(t_results)
-        print("=================================================================================\n\n\n")
 
         # 세그먼트 비교
         highest_segment, lowest_segment = compare_segments(
             word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
         )
-
-        print("=================================================================================")
-        print("highest_segment : ")
-        print(highest_segment)
-        print("=================================================================================")
-        print("lowest_segment : ")
-        print(lowest_segment)
 
         # 파일 삭제
         os.remove(user_voice_path)

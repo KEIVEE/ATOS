@@ -51,6 +51,5 @@ def extract_word_timestamps(audio_file, model_size="large-v2", device='cuda', ba
                 "start": word["start"],
                 "end": word["end"]
             })
-    print(timestamps)
 
     return timestamps

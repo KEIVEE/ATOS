@@ -39,7 +39,7 @@ def ts_cal (text_ts, ori_text):
 
         # JSON 응답 파싱
         json_response = json.loads(completion.choices[0].message.content)
-        print(json_response)
+        # print(json_response)
 
         # JSON 데이터를 파싱하여 ts_list에 저장
         for item in json_response:
@@ -51,9 +51,9 @@ def ts_cal (text_ts, ori_text):
                 }
                 #print(cal_ts)
                 ts_list.append(cal_ts)
-        print('\n\n===============================================================\n\n')
-        print(ts_list)
-        print('\n\n===============================================================\n\n')
+        # print('\n\n===============================================================\n\n')
+        # print(ts_list)
+        # print('\n\n===============================================================\n\n')
         
     except json.JSONDecodeError:
         print("응답을 JSON으로 변환하는 데 실패했습니다.")

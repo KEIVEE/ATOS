@@ -18,7 +18,7 @@ def gpt_translate (region, text):
         { "role" : "user", "content" : text}
     ])
 
-    print("text_translate.py print : "+ completion.choices[0].message.content)
+    #print("text_translate.py print : "+ completion.choices[0].message.content)
 
     return completion.choices[0].message.content
 
