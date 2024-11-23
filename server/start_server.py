@@ -473,17 +473,11 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         tts_word_intervals = extract_word_timestamps(tts_voice_path)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            print("============멀티스레딩 진입============")
             future_word_intervals = executor.submit(ts_cal, word_intervals, text)
             future_tts_word_intervals = executor.submit(ts_cal, tts_word_intervals, text)
 
             word_intervals = future_word_intervals.result()
             tts_word_intervals = future_tts_word_intervals.result()
-
-        #word_intervals = ts_cal(word_intervals, text)
-        #tts_word_intervals = ts_cal(tts_word_intervals, text)
-        print(word_intervals)
-        print(tts_word_intervals)
 
         threshold_value = 5600
         user_exceeding_words, tts_exceeding_words, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
