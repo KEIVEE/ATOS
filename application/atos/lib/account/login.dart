@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:atos/managing/manage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'package:atos/control/uri.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,6 +24,13 @@ class LoginState extends State<LoginPage> {
       await firebaseAuth.signInWithEmailAndPassword(
         email: '$id@example.com',
         password: password,
+      );
+
+      http.get(
+        Uri.parse('${ControlUri.BASE_URL}/login/$id'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
       );
 
       // 로그인 성공 시, 사용자 이름을 설정하고 페이지 이동
