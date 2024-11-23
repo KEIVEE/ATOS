@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:atos/control/uri.dart';
-import 'package:path_provider/path_provider.dart';
 
 class InputAnalyzingPage extends StatefulWidget {
   const InputAnalyzingPage({
@@ -31,24 +30,12 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  var ttsPath = '';
-  var userPath = '';
-
   //Map<String, String> headers = {
-    //'Content-Type': 'multipart/form-data',
-    //'Accept': 'application/gzip',
-    //'Accept-Encoding': 'gzip',
- // };
+  //'Content-Type': 'multipart/form-data',
+  //'Accept': 'application/gzip',
+  //'Accept-Encoding': 'gzip',
+  // };
 
-  Future<void> _fetchFile() async {
-    final directory = await getApplicationDocumentsDirectory();
-
-    setState(() {
-      ttsPath = '${directory.path}/${widget.ttsVoicePath}'; 
-      userPath = '${directory.path}/${widget.userVoicePath}';
-});
-    
-  }
   Future<void> _processRequest() async {
     final request = http.MultipartRequest(
       'POST',
@@ -56,22 +43,19 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
     );
 
     // Add files
-    request.files.add(await http.MultipartFile.fromPath('tts_voice', ttsPath));
-    request.files
-        .add(await http.MultipartFile.fromPath('user_voice', userPath));
+    request.files.add(
+        await http.MultipartFile.fromPath('tts_voice', widget.ttsVoicePath));
+    request.files.add(
+        await http.MultipartFile.fromPath('user_voice', widget.userVoicePath));
 
     // Add user ID as field
     request.fields['text'] = widget.inputText;
     request.fields['user_id'] = widget.id;
-    
-    
+
     try {
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        
-        
-        
         //뭘 넘겨줄 것인가
         final responseBody = await response.stream.bytesToString();
         final responseJson = jsonDecode(responseBody);
@@ -82,12 +66,11 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
             MaterialPageRoute(
               settings: const RouteSettings(name: "/show"),
               builder: (context) => ShowPage(
-                id: widget.id,
-                text: widget.inputText,
-                ttsAudio: ttsPath,
-                userAudio: userPath,
-                result: responseJson['temp_id']
-              ),
+                  id: widget.id,
+                  text: widget.inputText,
+                  ttsAudio: widget.ttsVoicePath,
+                  userAudio: widget.userVoicePath,
+                  result: responseJson['temp_id']),
             ),
           );
         }
@@ -97,16 +80,14 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
     } catch (e) {
       debugPrint("HTTP 요청 오류: $e");
     }
-     
   }
 
-    Future<void> _fetchFileAndProcessRequest() async {
-    await _fetchFile();
+  Future<void> _fetchFileAndProcessRequest() async {
     await _processRequest();
   }
-  
+
   @override
-  void initState() async {
+  void initState() {
     super.initState();
     _fetchFileAndProcessRequest();
   }

@@ -46,6 +46,7 @@ dependencies:
   path:
   firebase_storage:
   dio:
+  archive:
   
   #flutter_fft: 
   

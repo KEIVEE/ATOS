@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart' as sound;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http; // HTTP 요청을 위한 패키지
-import 'dart:io'; // File 객체 사용
+//import 'package:http/http.dart' as http; // HTTP 요청을 위한 패키지
+//import 'dart:io'; // File 객체 사용
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 //import 'package:atos/inputs/inputanalyzing.dart';
@@ -10,6 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
 import 'inputanalyzing.dart';
+//import 'package:atos/control/uri.dart';
 
 // TranslatedPage는 음성 녹음 및 업로드와 관련된 기능을 포함하는 StatefulWidget
 class TranslatedPage extends StatefulWidget {
@@ -36,7 +37,6 @@ class _TranslatedState extends State<TranslatedPage> {
   String standardFilePath = ""; // TTS 파일 경로 저장
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   String downloadURL = '';
@@ -143,52 +143,52 @@ class _TranslatedState extends State<TranslatedPage> {
     }
   }
 
-  // 서버에 음성 파일을 업로드하는 메소드
-  Future<void> uploadAudioFile(File userAudio, File standardAudio) async {
-    const String apiUrl = 'http://222.237.88.211:8000/'; // 서버 API URL
-    try {
-      // 현재 시각을 가져옵니다.
-      //String currentTime = DateTime.now().toIso8601String();
+  // // 서버에 음성 파일을 업로드하는 메소드
+  // Future<void> _uploadAudioFile(File userAudio, File standardAudio) async {
+  //   const String apiUrl = '${ControlUri.BASE_URL}/'; // 서버 API URL
+  //   try {
+  //     // 현재 시각을 가져옵니다.
+  //     //String currentTime = DateTime.now().toIso8601String();
 
-      // HTTP 요청을 생성
-      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-      request.files.add(await http.MultipartFile.fromPath(
-        'user_voice', // 서버에서 받을 필드 이름
-        userAudio.path, // 파일 경로
-      ));
-      request.files.add(await http.MultipartFile.fromPath(
-        'user_voice', // 서버에서 받을 필드 이름
-        standardAudio.path, // 파일 경로
-      ));
-      request.fields['user_id'] = widget.id; // 사용자 ID 필드 추가
-      request.fields['text'] = widget.translatedText;
+  //     // HTTP 요청을 생성
+  //     var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+  //     request.files.add(await http.MultipartFile.fromPath(
+  //       'user_voice', // 서버에서 받을 필드 이름
+  //       userAudio.path, // 파일 경로
+  //     ));
+  //     request.files.add(await http.MultipartFile.fromPath(
+  //       'user_voice', // 서버에서 받을 필드 이름
+  //       standardAudio.path, // 파일 경로
+  //     ));
+  //     request.fields['user_id'] = widget.id; // 사용자 ID 필드 추가
+  //     request.fields['text'] = widget.translatedText;
 
-      // 요청을 전송하고 응답을 받음
-      var response = await request.send();
-      if (mounted) {
-        // 위젯이 여전히 화면에 있으면
-        if (response.statusCode == 200) {
-          // 업로드 성공 시
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('음성 파일 업로드 성공!')),
-          );
-        } else {
-          // 업로드 실패 시
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('업로드 실패: ${response.statusCode}')),
-          );
-        }
-      }
-    } catch (e) {
-      // 업로드 중 오류가 발생한 경우
-      if (mounted) {
-        // 위젯이 여전히 화면에 있으면
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('업로드 중 오류 발생: $e')),
-        );
-      }
-    }
-  }
+  //     // 요청을 전송하고 응답을 받음
+  //     var response = await request.send();
+  //     if (mounted) {
+  //       // 위젯이 여전히 화면에 있으면
+  //       if (response.statusCode == 200) {
+  //         // 업로드 성공 시
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(content: Text('음성 파일 업로드 성공!')),
+  //         );
+  //       } else {
+  //         // 업로드 실패 시
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text('업로드 실패: ${response.statusCode}')),
+  //         );
+  //       }
+  //     }
+  //   } catch (e) {
+  //     // 업로드 중 오류가 발생한 경우
+  //     if (mounted) {
+  //       // 위젯이 여전히 화면에 있으면
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('업로드 중 오류 발생: $e')),
+  //       );
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -221,19 +221,16 @@ class _TranslatedState extends State<TranslatedPage> {
             const SizedBox(height: 20),
             // 분석 시작 버튼
             OutlinedButton(
-              onPressed: () async {
-                await uploadAudioFile(
-                    File(recordedFilePath), File(standardFilePath));
+              onPressed: () /*async*/ {
+                // await uploadAudioFile(
+                //     File(recordedFilePath), File(standardFilePath));
                 Navigator.of(context).push(MaterialPageRoute(
-                        settings: const RouteSettings(name: "/inputanalyzing"),
-                        builder: (context) => InputAnalyzingPage(
-                            id: widget.id,
-                            inputText: widget.translatedText,
-                            userVoicePath : recordedFilePath,
-                            ttsVoicePath : standardFilePath
-                      )
-                    )
-                  );
+                    settings: const RouteSettings(name: "/inputanalyzing"),
+                    builder: (context) => InputAnalyzingPage(
+                        id: widget.id,
+                        inputText: widget.translatedText,
+                        userVoicePath: recordedFilePath,
+                        ttsVoicePath: standardFilePath)));
               },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
