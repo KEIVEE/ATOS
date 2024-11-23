@@ -8,3 +8,4 @@ server/analysis/__pycache__
 server/filtered_audio
 server/tts_audio
 server/pitch_audio
+server/gzip
