@@ -307,7 +307,11 @@ async def get_tts(request: GetTTSReqDTO):
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
         blob.upload_from_string(audio, content_type="audio/wav")
 
-        return audio_db_collection + translated_text_ref.id + audio_type
+        response = {
+            "audio_title": audio_db_collection + translated_text_ref.id + audio_type
+        }
+
+        return response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
