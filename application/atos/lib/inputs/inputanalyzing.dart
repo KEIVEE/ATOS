@@ -4,16 +4,22 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:atos/control/uri.dart';
+import 'package:path_provider/path_provider.dart';
 
 class InputAnalyzingPage extends StatefulWidget {
   const InputAnalyzingPage({
     super.key,
     required this.id,
     required this.inputText,
+    required this.userVoicePath,
+    required this.ttsVoicePath,
   });
 
   final String id;
   final String inputText;
+  final String userVoicePath;
+  final String ttsVoicePath;
 
   @override
   State<InputAnalyzingPage> createState() => InputAnalyzingState();
@@ -25,55 +31,84 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  };
+  var ttsPath = '';
+  var userPath = '';
 
-  Future<void> _fetchRegion() async {
-    User? user = auth.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc =
-          await db.collection('userData').doc(widget.id).get();
-      setState(() {
-        region = userDoc['region'];
-      });
+  //Map<String, String> headers = {
+    //'Content-Type': 'multipart/form-data',
+    //'Accept': 'application/gzip',
+    //'Accept-Encoding': 'gzip',
+ // };
+
+  Future<void> _fetchFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+
+    setState(() {
+      ttsPath = '${directory.path}/${widget.ttsVoicePath}'; 
+      userPath = '${directory.path}/${widget.userVoicePath}';
+});
+    
+  }
+  Future<void> _processRequest() async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ControlUri.BASE_URL}/voice-analysis'),
+    );
+
+    // Add files
+    request.files.add(await http.MultipartFile.fromPath('tts_voice', ttsPath));
+    request.files
+        .add(await http.MultipartFile.fromPath('user_voice', userPath));
+
+    // Add user ID as field
+    request.fields['text'] = widget.inputText;
+    request.fields['user_id'] = widget.id;
+    
+    
+    try {
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        
+        
+        
+        //뭘 넘겨줄 것인가
+        final responseBody = await response.stream.bytesToString();
+        final responseJson = jsonDecode(responseBody);
+
+        //debugPrint(responseData.toString());
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              settings: const RouteSettings(name: "/show"),
+              builder: (context) => ShowPage(
+                id: widget.id,
+                text: widget.inputText,
+                ttsAudio: ttsPath,
+                userAudio: userPath,
+                result: responseJson['temp_id']
+              ),
+            ),
+          );
+        }
+      } else {
+        debugPrint("오류 발생: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("HTTP 요청 오류: $e");
     }
+     
   }
 
+    Future<void> _fetchFileAndProcessRequest() async {
+    await _fetchFile();
+    await _processRequest();
+  }
+  
   @override
   void initState() async {
     super.initState();
-    _fetchRegion();
-
-    try {
-      http.Response response = await http.post(
-          Uri.parse('http://http://222.237.88.211:8000/translate-text'),
-          body: json.encode({
-            'text': widget.inputText,
-            'user_id': widget.id,
-            "region": region
-          }),
-          headers: headers);
-
-      if (response.statusCode != 200) {
-        debugPrint("등록 오류.");
-      }
-
-      final responseData = jsonDecode(response.body);
-      setState(() {
-        translatedText = responseData['translated_text_data'];
-      });
-    } catch (e) {
-      debugPrint("에러 발생: $e");
-    }
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        settings: const RouteSettings(name: "/translated"),
-        builder: (context) => ShowPage(id: widget.id),
-      ),
-    );
+    _fetchFileAndProcessRequest();
   }
 
   @override

@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 // 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 
 class ShowPage extends StatefulWidget {
-  const ShowPage({super.key, required this.id});
+  const ShowPage({super.key, required this.ttsAudio, required this.id, required this.text, required this.userAudio,
+  required this.result});
+
   final String id;
+  final String ttsAudio;
+  final String userAudio;
+  final String text;
+  final String result;
 
   @override
   State<ShowPage> createState() => ShowState();

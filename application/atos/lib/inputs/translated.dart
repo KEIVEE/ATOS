@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
+import 'inputanalyzing.dart';
 
 // TranslatedPage는 음성 녹음 및 업로드와 관련된 기능을 포함하는 StatefulWidget
 class TranslatedPage extends StatefulWidget {
@@ -31,10 +32,11 @@ class _TranslatedState extends State<TranslatedPage> {
   final recorder =
       sound.FlutterSoundRecorder(); // FlutterSoundRecorder 객체로 음성 녹음 기능 제공
   bool isRecording = false; // 녹음 중인지 여부를 저장하는 변수
-  String? recordedFilePath; // 녹음된 파일 경로 저장
-  String? standardFilePath; // TTS 파일 경로 저장
+  String recordedFilePath = ""; // 녹음된 파일 경로 저장
+  String standardFilePath = ""; // TTS 파일 경로 저장
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   String downloadURL = '';
@@ -221,7 +223,17 @@ class _TranslatedState extends State<TranslatedPage> {
             OutlinedButton(
               onPressed: () async {
                 await uploadAudioFile(
-                    File(recordedFilePath!), File(standardFilePath!));
+                    File(recordedFilePath), File(standardFilePath));
+                Navigator.of(context).push(MaterialPageRoute(
+                        settings: const RouteSettings(name: "/inputanalyzing"),
+                        builder: (context) => InputAnalyzingPage(
+                            id: widget.id,
+                            inputText: widget.translatedText,
+                            userVoicePath : recordedFilePath,
+                            ttsVoicePath : standardFilePath
+                      )
+                    )
+                  );
               },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
