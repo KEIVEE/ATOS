@@ -8,7 +8,7 @@ from firebase_admin import firestore
 from firebase_admin import storage
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from io import BytesIO
 
 from server.DTO.set_user_dto import UserDTO, SetRegionDTO
@@ -26,6 +26,7 @@ from datetime import datetime
 import concurrent.futures
 import gzip
 import json
+import zipfile
 
 import os
 import shutil
@@ -386,6 +387,29 @@ async def get_user_practice(user_id : str) :
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
+@app.get("/get-user-practice-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['User api'])
+async def get_user_practice_data(data_path: str):
+    try:
+        blob = bucket.blob(data_path + 'userVoice.wav')
+        blob2 = bucket.blob(data_path + 'ttsVoice.wav')
+        blob3 = bucket.blob(data_path + 'analysis.json.gz')
+        user_voice = blob.download_as_string()
+        tts_voice = blob2.download_as_string()
+        analysis_result = blob3.download_as_string()
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+            zip_file.writestr("userVoice.wav", user_voice)
+            zip_file.writestr("ttsVoice.wav", tts_voice)
+            zip_file.writestr("analysis.json.gz", analysis_result)
+
+        zip_buffer.seek(0)
+        
+        return StreamingResponse(zip_buffer, media_type="application/zip", headers={"Content-Disposition": f"attachment; filename={data_path}.zip"})
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
 @app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['User api'])
 async def save_user_practice(request: SavePracticeDTO):
     try:
@@ -393,8 +417,10 @@ async def save_user_practice(request: SavePracticeDTO):
         audio_db_collection = 'temp/' + request.temp_id + '/'
         blob = bucket.blob(audio_db_collection + 'userVoice.wav')
         blob2 = bucket.blob(audio_db_collection + 'ttsVoice.wav')
+        blob3 = bucket.blob(audio_db_collection + 'analysis.json.gz')
         user_voice = blob.download_as_string()
         tts_voice = blob2.download_as_string()
+        analysis_result = blob3.download_as_string()
 
         date = datetime.now()
         formatted_date = str(date.strftime("%Y%m%d%H%M%S"))
@@ -404,6 +430,8 @@ async def save_user_practice(request: SavePracticeDTO):
         blob.upload_from_string(user_voice, content_type="audio/wav")
         blob = bucket.blob(practice_save_db + 'ttsVoice.wav')
         blob.upload_from_string(tts_voice, content_type="audio/wav")
+        blob = bucket.blob(practice_save_db + 'analysis.json.gz')
+        blob.upload_from_string(analysis_result, content_type="application/gzip")
 
         user_practice_save_dto = {
             'user_id': request.user_id,
@@ -411,7 +439,7 @@ async def save_user_practice(request: SavePracticeDTO):
             'description': request.description,
             'text': text,
             'date': str(date.date()),
-            'voice_path': practice_save_db
+            'data_path': practice_save_db
         }
 
         userPractice_db.document().set(user_practice_save_dto)
@@ -535,14 +563,13 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
 
         # Gzip 파일을 Firebase Storage에 업로드
         gzip_buffer.seek(0)
-        blob = bucket.blob(temp_db_collection+"analysis.json.gz")
+        blob = bucket.blob(f"{temp_db_collection}analysis.json.gz")
         blob.upload_from_file(gzip_buffer, content_type="application/gzip")
 
-        # result 구성 요소
-        # 1. 보정된 timestamp (json 형식)
-        # 2. 사용자 음성과 TTS 음성의 세기 차이가 큰 단어 (json 형식)
-        # 3. temp_save_id (string) ==> 나중에 저장 시 사용
-        return JSONResponse(content=result, headers={"Content-Encoding": "gzip"})
+        def iterfile():
+            gzip_buffer.seek(0)
+            yield from gzip_buffer
+        return StreamingResponse(iterfile(), media_type="application/json", headers={"Content-Encoding": "gzip"})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
