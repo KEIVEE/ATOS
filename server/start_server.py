@@ -132,6 +132,41 @@ async def get_user(user_id: str):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.post('/set-user-pitch',description='사용자 피치 저장', tags=['User api'])
+async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(...), user_id: str = Form(...)):
+    try:
+        upload_dir = "server/pitch_audio"
+        os.makedirs(upload_dir, exist_ok=True)
+        low_voice_path = os.path.join(upload_dir, low.filename)
+        with open(low_voice_path, "wb") as buffer:
+            shutil.copyfileobj(low.file, buffer)
+
+        high_voice_path = os.path.join(upload_dir, high.filename)
+        with open(high_voice_path, "wb") as buffer:
+            shutil.copyfileobj(high.file, buffer)
+
+        low_pitch = get_pitch_median(low_voice_path)
+        high_pitch = get_pitch_median(high_voice_path)
+
+        low_pitch = max(50, low_pitch)
+        high_pitch = min(300, high_pitch)
+
+        user_pitch_save_dto = {
+            'low_pitch': int(low_pitch),
+            'high_pitch': int(high_pitch)
+        }
+
+        user_pitch_ref = userData_db.document(user_id)
+        user_pitch_ref.update(user_pitch_save_dto)
+
+        os.remove(low_voice_path)
+        os.remove(high_voice_path)
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성', tags=['TTS api']) 
 async def translate_text(request: TransTextDTO):
@@ -307,7 +342,6 @@ async def save_user_practice(request: SavePracticeDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
-
 @app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'])
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
     try :
@@ -346,7 +380,15 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         blob = bucket.blob(temp_db_collection + 'ttsVoice.wav')
         blob.upload_from_string(tts_audio, content_type="audio/wav")
 
-        sampling_rate, filtered_data, pitch_values, time_steps = process_and_save_filtered_audio(input_file_path=user_voice_path)
+        user_doc = userData_db.document(user_id).get()
+        if not user_doc.exists:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user_data = user_doc.to_dict()
+        low = user_data.get('low_pitch')
+        high = user_data.get('high_pitch')
+
+        sampling_rate, filtered_data, pitch_values, time_steps = process_and_save_filtered_audio(input_file_path=user_voice_path, human_voice_range=(low-10, high+10))
 
         with open(user_voice_path, "rb") as audio_file:
             audio = audio_file.read()
