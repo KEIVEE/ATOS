@@ -5,12 +5,14 @@ class TitleButton extends StatelessWidget {
   final String title;
   final String sentence;
   final String id;
+  final String path;
 
   const TitleButton(
       {super.key,
       required this.title,
       required this.id,
-      required this.sentence});
+      required this.sentence,
+      required this.path});
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class TitleButton extends StatelessWidget {
               id: id,
               title: title,
               sentence: sentence,
+              path: path,
             ),
           ),
         );

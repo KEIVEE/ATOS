@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 //import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:atos/control/uri.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 
@@ -26,9 +27,55 @@ class ShowPage extends StatefulWidget {
 }
 
 class ShowState extends State<ShowPage> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   Map<String, String> headers = {
+    'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
+
+  Map<String, dynamic> jsonData = {};
+
+  Future<void> _playAudio(String path) async {
+    try {
+      // 오디오 플레이어를 통해 음성 파일 재생
+      await _audioPlayer.play(DeviceFileSource(path));
+    } catch (e) {
+      debugPrint("오디오 재생 오류: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getZip();
+  }
+
+  Future<void> saveResult() async {
+    try {
+      // HTTP POST 요청으로 JSON 데이터 업로드
+      final response = await http.post(
+        Uri.parse('${ControlUri.BASE_URL}/save-user-practice'),
+        headers: headers,
+        body: jsonEncode(
+          {"user_id": widget.id, "temp_id": widget.result, "title": "string"},
+        ),
+      );
+
+      debugPrint(jsonEncode(
+          {"user_id": widget.id, "temp_id": widget.result, "title": "string"}));
+
+      if (response.statusCode == 200) {
+        debugPrint('데이터가 성공적으로 업로드되었습니다.');
+      } else {
+        debugPrint('HTTP 요청 실패: ${response.statusCode}');
+        debugPrint('HTTP 요청 실패: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('데이터 처리 중 오류 발생: $e');
+    }
+  }
+
   Future<void> getZip() async {
     try {
       // HTTP GET 요청으로 JSON 데이터 다운로드
@@ -45,6 +92,10 @@ class ShowState extends State<ShowPage> {
 
           // JSON 파싱
           Map<String, dynamic> jsonData = jsonDecode(jsonString);
+
+          print(jsonData['results']);
+
+          print(jsonData);
           //debugPrint('JSON 데이터: $jsonData');
 
           // 다운로드 디렉토리 경로 가져오기
@@ -89,13 +140,17 @@ class ShowState extends State<ShowPage> {
             const Text('그래프'),
             Text(widget.result),
             OutlinedButton(
-                onPressed: null,
+                onPressed: () {
+                  _playAudio(widget.ttsAudio);
+                },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('표준어 듣기')),
             OutlinedButton(
-                onPressed: null,
+                onPressed: () {
+                  _playAudio(widget.userAudio);
+                },
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
@@ -111,18 +166,20 @@ class ShowState extends State<ShowPage> {
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('홈으로 가기 = 연습목록에 추가하지 않기')),
             OutlinedButton(
-                onPressed: null,
+                onPressed: saveResult,
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('연습목록에 추가')),
+
+            Text(jsonData['results'].toString()),
             const Text('양옆으로 바꿀 거임. 아니면 양옆 늘려서 이대로 가던가, 아이콘으로 바꾸던가?'),
-            OutlinedButton(
-                onPressed: getZip,
-                style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0))),
-                child: const Text('zip파일 테스트')),
+            // OutlinedButton(
+            //     onPressed: getZip,
+            //     style: OutlinedButton.styleFrom(
+            //         shape: RoundedRectangleBorder(
+            //             borderRadius: BorderRadius.circular(10.0))),
+            //     child: const Text('zip파일 테스트')),
           ],
         ),
       ),
