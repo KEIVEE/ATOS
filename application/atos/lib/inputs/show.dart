@@ -28,6 +28,7 @@ class ShowPage extends StatefulWidget {
 
 class ShowState extends State<ShowPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  var title = '';
 
   Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -35,6 +36,43 @@ class ShowState extends State<ShowPage> {
   };
 
   Map<String, dynamic> jsonData = {};
+
+  Future<void> showTitleInputDialog() async {
+    final TextEditingController titleController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('제목 입력'),
+          content: TextField(
+            controller: titleController,
+            decoration: const InputDecoration(
+              hintText: '제목을 입력하세요',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // 팝업 닫기
+              },
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  title = titleController.text; // 입력한 제목 저장
+                });
+                saveResult(); // 연습목록에 추가
+                Navigator.pop(context); // 팝업 닫기
+              },
+              child: const Text('저장'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> _playAudio(String path) async {
     try {
@@ -53,17 +91,28 @@ class ShowState extends State<ShowPage> {
 
   Future<void> saveResult() async {
     try {
-      // HTTP POST 요청으로 JSON 데이터 업로드
+      if (title.isEmpty) {
+        debugPrint('제목이 비어 있습니다. 저장하지 않습니다.');
+        return;
+      }
+
       final response = await http.post(
         Uri.parse('${ControlUri.BASE_URL}/save-user-practice'),
         headers: headers,
         body: jsonEncode(
-          {"user_id": widget.id, "temp_id": widget.result, "title": "string"},
+          {
+            "user_id": widget.id,
+            "temp_id": widget.result,
+            "title": title,
+          },
         ),
       );
 
-      debugPrint(jsonEncode(
-          {"user_id": widget.id, "temp_id": widget.result, "title": "string"}));
+      debugPrint(jsonEncode({
+        "user_id": widget.id,
+        "temp_id": widget.result,
+        "title": title,
+      }));
 
       if (response.statusCode == 200) {
         debugPrint('데이터가 성공적으로 업로드되었습니다.');
@@ -166,11 +215,16 @@ class ShowState extends State<ShowPage> {
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('홈으로 가기 = 연습목록에 추가하지 않기')),
             OutlinedButton(
-                onPressed: saveResult,
-                style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0))),
-                child: const Text('연습목록에 추가')),
+              onPressed: () {
+                showTitleInputDialog();
+              },
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              child: const Text('연습목록에 추가'),
+            ),
 
             Text(jsonData['results'].toString()),
             const Text('양옆으로 바꿀 거임. 아니면 양옆 늘려서 이대로 가던가, 아이콘으로 바꾸던가?'),

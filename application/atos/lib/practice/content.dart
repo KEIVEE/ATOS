@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:atos/inputs/graph.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -7,7 +8,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class ContentPage extends StatefulWidget {
   const ContentPage({
@@ -36,16 +36,26 @@ class ContentState extends State<ContentPage> {
   String userDownloadURL = '';
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  final _audioPlayer = AudioPlayer();
-
   String jsonData = '';
-  List<FlSpot> chartData = [];
   List<FlSpot> userGraphData = [];
   List<FlSpot> ttsGraphData = [];
+  List<FlSpot> userAmplitudeGraphData = [];
+  List<FlSpot> ttsAmplitudeGraphData = [];
   List<double> userPitchValues = [];
   List<double> ttsPitchValues = [];
   List<double> userTimeSteps = [];
   List<double> ttsTimeSteps = [];
+  List<double> userAmplitudeValues = [];
+  List<double> ttsAmplitudeValues = [];
+  List<String> feedbacks = [];
+  List<int> results = [];
+  int userSamplingRate = 0;
+  int ttsSamplingRate = 0;
+
+  double currentuserStart = 0.0;
+  double currentuserEnd = 0.0;
+  double currentttsStart = 0.0;
+  double currentttsEnd = 0.0;
 
   @override
   void initState() {
@@ -131,6 +141,20 @@ class ContentState extends State<ContentPage> {
                   ?.map((e) => (e as num).toDouble())
                   .toList() ??
               []; // If null, assign an empty list
+          userAmplitudeValues = (data['filtered_data'] as List<dynamic>?)
+                  ?.map((e) => (e as num).toDouble())
+                  .toList() ??
+              []; // If null, assign an empty list
+          ttsAmplitudeValues = (data['tts_data'] as List<dynamic>?)
+                  ?.map((e) => (e as num).toDouble())
+                  .toList() ??
+              []; // If null, assign an empty list
+          userSamplingRate = data['sampling_rate'] as int? ?? 0;
+          ttsSamplingRate = data['tts_sampling_rate'] as int? ?? 0;
+          results = (data['results'] as List<dynamic>?)
+                  ?.map((e) => (e as num).toInt())
+                  .toList() ??
+              []; // If null, assign an empty list
         });
       } else {
         debugPrint('JSON 파일이 존재하지 않습니다.');
@@ -172,29 +196,52 @@ class ContentState extends State<ContentPage> {
         wordButtons.add(
           Column(
             children: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () {
                   _updateGraphData(userStart, userEnd, ttsStart, ttsEnd);
+                  setState(() {
+                    userAmplitudeGraphData = generateUserAmplitudeData(
+                        userAmplitudeValues,
+                        userSamplingRate,
+                        userStart,
+                        userEnd);
+                    ttsAmplitudeGraphData = generateTtsAmplitudeData(
+                        ttsAmplitudeValues, ttsSamplingRate, ttsStart, ttsEnd);
+                    currentuserStart = userStart;
+                    currentuserEnd = userEnd;
+                    currentttsStart = ttsStart;
+                    currentttsEnd = ttsEnd;
+                  });
                 },
-                child: Text(word),
-              ),
-              // 표준어 들어보기 버튼
-              ElevatedButton(
-                onPressed: () {
-                  _playSegment(standardFilePath, ttsStart, ttsEnd);
-                },
-                child: Text("표준어 들어보기"),
-              ),
-              // 내 목소리 들어보기 버튼
-              ElevatedButton(
-                onPressed: () {
-                  _playSegment(recordedFilePath, userStart, userEnd);
-                },
-                child: Text("내 목소리 들어보기"),
+                child: Text(word, style: const TextStyle(fontSize: 20)),
               ),
             ],
           ),
         );
+        if (i < results.length) {
+          switch (results[i]) {
+            case 0:
+              wordButtons.add(SizedBox(width: 20));
+              break;
+            case 1:
+              wordButtons.add(Icon(
+                Icons.arrow_outward,
+                color: Colors.orange,
+                size: 20,
+              ));
+              break;
+            case -1:
+              wordButtons.add(Transform.rotate(
+                angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
+                child: Icon(
+                  Icons.arrow_downward,
+                  color: Colors.orange,
+                  size: 20,
+                ),
+              ));
+              break;
+          }
+        }
       }
 
       return wordButtons;
@@ -204,26 +251,41 @@ class ContentState extends State<ContentPage> {
     }
   }
 
-  Future<void> _playSegment(String path, double start, double end) async {
-    await _audioPlayer.play(
-      DeviceFileSource(path),
-      position: Duration(milliseconds: (start * 1000).toInt()),
-    );
-    Timer(Duration(milliseconds: ((end - start) * 1000).toInt()), () async {
-      await _audioPlayer.stop();
-    });
+  List<FlSpot> generateUserAmplitudeData(
+      List<double> amplitude, int samplingRate, double start, double end) {
+    int sampleStart = (start * samplingRate).toInt();
+    int sampleEnd = (end * samplingRate).toInt();
+    int length = sampleEnd - sampleStart;
+
+    List<FlSpot> spots = [];
+    for (int i = 0; i < length; i++) {
+      double value = amplitude[sampleStart + i];
+      if (value > 0) {
+        spots.add(FlSpot(i / samplingRate, -value));
+      }
+    }
+    return spots;
+  }
+
+  List<FlSpot> generateTtsAmplitudeData(
+      List<double> amplitude, int samplingRate, double start, double end) {
+    int sampleStart = (start * samplingRate).toInt();
+    int sampleEnd = (end * samplingRate).toInt();
+    int length = sampleEnd - sampleStart;
+
+    List<FlSpot> spots = [];
+    for (int i = 0; i < length; i++) {
+      double value = amplitude[sampleStart + i];
+      if (value > 0) {
+        spots.add(FlSpot(i / samplingRate, value));
+      }
+    }
+    return spots;
   }
 
   // 피치 데이터를 기준으로 그래프를 업데이트하는 함수
   void _updateGraphData(
       double userStart, double userEnd, double ttsStart, double ttsEnd) {
-    // 예시로 시간 범위 내에서 유저와 TTS의 피치 데이터를 불러와서 사용
-    // 실제로는 userStart, userEnd, ttsStart, ttsEnd에 해당하는 피치 데이터를 가져와야 함
-
-    print(userStart);
-    print(userEnd);
-    print(ttsStart);
-    print(ttsEnd);
     userGraphData = [];
     ttsGraphData = [];
 
@@ -245,15 +307,6 @@ class ContentState extends State<ContentPage> {
         ttsGraphData.add(FlSpot(ttsTimeSteps[i] - ttsStart, ttsPitchValues[i]));
       }
     }
-
-    print(ttsGraphData.length);
-
-    setState(() {
-      chartData = [
-        ...userGraphData,
-        ...ttsGraphData,
-      ];
-    });
   }
 
   @override
@@ -280,36 +333,27 @@ class ContentState extends State<ContentPage> {
             return SingleChildScrollView(
               child: Column(
                 children: [
-                  Wrap(
-                    spacing: 8.0,
-                    children: wordButtons,
-                  ),
                   SizedBox(
-                    height: 300,
+                    height: 450,
                     width: double.infinity,
-                    child: chartData.isEmpty
+                    child: userGraphData.isEmpty
                         ? Center(child: Text('단어를 선택하세요'))
-                        : LineChart(
-                            LineChartData(
-                              gridData: FlGridData(show: true),
-                              titlesData: FlTitlesData(show: true),
-                              borderData: FlBorderData(show: true),
-                              lineBarsData: [
-                                LineChartBarData(
-                                    spots: userGraphData,
-                                    isCurved: true,
-                                    color: Colors.blue,
-                                    barWidth: 4,
-                                    dotData: FlDotData(show: false)),
-                                LineChartBarData(
-                                    spots: ttsGraphData,
-                                    isCurved: true,
-                                    color: Colors.red,
-                                    barWidth: 4,
-                                    dotData: FlDotData(show: false)),
-                              ],
-                            ),
+                        : GraphPage(
+                            userGraphData: userGraphData,
+                            ttsGraphData: ttsGraphData,
+                            userAmplitudeGraphData: userAmplitudeGraphData,
+                            ttsAmplitudeGraphData: ttsAmplitudeGraphData,
+                            userAudioPath: recordedFilePath,
+                            ttsAudioPath: standardFilePath,
+                            currentUserStart: currentuserStart,
+                            currentUserEnd: currentuserEnd,
+                            currentTtsStart: currentttsStart,
+                            currentTtsEnd: currentttsEnd,
                           ),
+                  ),
+                  Wrap(
+                    spacing: 0.0,
+                    children: wordButtons,
                   ),
                 ],
               ),

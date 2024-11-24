@@ -76,6 +76,7 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
         }
       } else {
         debugPrint("오류 발생: ${response.statusCode}");
+        debugPrint("오류 발생: ${response.reasonPhrase}");
       }
     } catch (e) {
       debugPrint("HTTP 요청 오류: $e");
