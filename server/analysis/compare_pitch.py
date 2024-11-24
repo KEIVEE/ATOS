@@ -19,6 +19,7 @@ def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values
     user_results = []
     tts_results = []
     # 사용자 단어와 TTS 단어의 피치 차이 계산
+    result = []
     for i in range(min(len(word_intervals), len(tts_word_intervals))):  # 단어 개수의 최소값으로 루프
         user_word = word_intervals[i]  # 사용자의 단어
         tts_word = tts_word_intervals[i]  # TTS 단어
@@ -45,9 +46,11 @@ def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values
                 tts_pitch_diff = tts_pitch_max - tts_pitch_min
                 tts_max_time = tts_time_samples[np.argmax(tts_pitch_samples)]  # 최대 피치에 해당하는 시간
                 if user_pitch_diff - tts_pitch_diff > threshold:
-                    user_results.append({'word': user_word['word'], "idx": i})
-                if tts_pitch_diff - user_pitch_diff > threshold:
-                    tts_results.append({'word': user_word['word'], "idx": i})
+                    result.append(1)
+                elif tts_pitch_diff - user_pitch_diff > threshold:
+                    result.append(-1)
+                else:
+                    result.append(0)
 
                 '''
                 # 피치 차이가 임계값 초과하는 경우 결과 저장
@@ -67,5 +70,5 @@ def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values
 
                 '''
 
-    return user_results,tts_results
+    return result
 

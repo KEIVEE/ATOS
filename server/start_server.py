@@ -484,7 +484,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         temp_db_collection = 'temp/'+temp_save_id+'/'
         os.makedirs(upload_dir, exist_ok=True)
 
-        first_audio_db_collection = 'FirstUserVoice/' + audio_file.name
+        first_audio_db_collection = 'FirstUserVoice/' + user_voice.filename
         # 텍스트 임시 저장
         text_save_dto = {
             'user_id': user_id,
