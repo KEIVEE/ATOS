@@ -11,6 +11,9 @@ from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import StreamingResponse, Response
 from io import BytesIO
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
 from server.DTO.set_user_dto import UserDTO, SetRegionDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
@@ -67,6 +70,16 @@ userData_db = db.collection('userData')
 userConnection_db = db.collection('userConnection')
 tempText_db = db.collection('tempText')
 userPractice_db = db.collection('userPractice')
+
+# class LogMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next):
+#         body = await request.body()
+#         print(f"Headers: {request.headers}")
+#         print(f"Body: {body}")
+#         response = await call_next(request)
+#         return response
+
+# app.add_middleware(LogMiddleware)
 
 @app.on_event("startup")
 async def startup_event():
@@ -413,11 +426,11 @@ async def get_user_practice_data(data_path: str):
 @app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['Practice api'])
 async def save_user_practice(request: SavePracticeDTO):
     try:
-        text = tempText_db.document(request.temp_id).get().to_dict().get('text')
-        audio_db_collection = 'temp/' + request.temp_id + '/'
+        text = tempText_db.document(str(request.temp_id)).get().to_dict().get('text')
+        audio_db_collection = 'temp/' + str(request.temp_id) + '/'
         blob = bucket.blob(audio_db_collection + 'userVoice.wav')
         blob2 = bucket.blob(audio_db_collection + 'ttsVoice.wav')
-        blob3 = bucket.blob(audio_db_collection + 'analysis.json.gz')
+        blob3 = bucket.blob(audio_db_collection + 'analysis.json')
         user_voice = blob.download_as_string()
         tts_voice = blob2.download_as_string()
         analysis_result = blob3.download_as_string()
@@ -425,17 +438,17 @@ async def save_user_practice(request: SavePracticeDTO):
         date = datetime.now()
         formatted_date = str(date.strftime("%Y%m%d%H%M%S"))
 
-        practice_save_db = 'userPractice/'+request.user_id+ formatted_date +'/'
+        practice_save_db = 'userPractice/'+str(request.user_id)+ formatted_date +'/'
         blob = bucket.blob(practice_save_db + 'userVoice.wav')
         blob.upload_from_string(user_voice, content_type="audio/wav")
         blob = bucket.blob(practice_save_db + 'ttsVoice.wav')
         blob.upload_from_string(tts_voice, content_type="audio/wav")
-        blob = bucket.blob(practice_save_db + 'analysis.json.gz')
-        blob.upload_from_string(analysis_result, content_type="application/gzip")
+        blob = bucket.blob(practice_save_db + 'analysis.json')
+        blob.upload_from_string(analysis_result, content_type="application/json")
 
         user_practice_save_dto = {
-            'user_id': request.user_id,
-            'title': request.title,
+            'user_id': str(request.user_id),
+            'title': str(request.title),
             'text': text,
             'date': str(date.date()),
             'data_path': practice_save_db
