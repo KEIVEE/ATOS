@@ -47,6 +47,7 @@ dependencies:
   firebase_storage:
   dio:
   archive:
+  fl_chart:
   
   #flutter_fft: 
   
