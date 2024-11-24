@@ -436,7 +436,6 @@ async def save_user_practice(request: SavePracticeDTO):
         user_practice_save_dto = {
             'user_id': request.user_id,
             'title': request.title,
-            'description': request.description,
             'text': text,
             'date': str(date.date()),
             'data_path': practice_save_db
