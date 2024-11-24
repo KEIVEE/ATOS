@@ -551,9 +551,9 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
 
         # 세그먼트 비교
-        highest_segment, lowest_segment = compare_segments(
-            word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
-        )
+        # highest_segment, lowest_segment = compare_segments(
+        #     word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
+        # )
 
         results = compare_pitch_differences(word_intervals, pitch_values, tts_word_intervals, pitch_values_tts,time_steps,time_steps_tts, threshold=20)
      
@@ -569,8 +569,8 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             'max_word': max_word,
             'u_results': u_results,
             't_results': t_results,
-            'highest_segment': highest_segment,
-            'lowest_segment': lowest_segment,
+            #'highest_segment': highest_segment,
+            #'lowest_segment': lowest_segment,
             'tts_data': tts_data.tolist(),
             'filtered_data': filtered_data.tolist(),
             'sampling_rate': sampling_rate,
