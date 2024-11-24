@@ -545,9 +545,9 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             tts_word_intervals = future_tts_word_intervals.result()
 
         threshold_value = 5600
-        user_exceeding_words, tts_exceeding_words, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
+        comp_amp_result, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
 
-        u_results,t_results = calculate_pitch_differences(
+        comp_pitch_result = calculate_pitch_differences(
         word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
 
         # 세그먼트 비교
@@ -564,11 +564,9 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         result = {
             'word_intervals': word_intervals,
             'tts_word_intervals': tts_word_intervals,
-            'user_exceeding_words': user_exceeding_words,
-            'tts_exceeding_words': tts_exceeding_words,
+            'comp_amp_result': comp_amp_result,
             'max_word': max_word,
-            'u_results': u_results,
-            't_results': t_results,
+            'comp_pitch_result': comp_pitch_result,
             #'highest_segment': highest_segment,
             #'lowest_segment': lowest_segment,
             'tts_data': tts_data.tolist(),
