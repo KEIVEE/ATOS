@@ -427,6 +427,7 @@ async def get_user_practice_data(data_path: str):
 async def save_user_practice(request: SavePracticeDTO):
     try:
         text = tempText_db.document(str(request.temp_id)).get().to_dict().get('text')
+        first_audio = tempText_db.document(str(request.temp_id)).get().to_dict().get('first_audio')
         audio_db_collection = 'temp/' + str(request.temp_id) + '/'
         blob = bucket.blob(audio_db_collection + 'userVoice.wav')
         blob2 = bucket.blob(audio_db_collection + 'ttsVoice.wav')
@@ -451,7 +452,8 @@ async def save_user_practice(request: SavePracticeDTO):
             'title': str(request.title),
             'text': text,
             'date': str(date.date()),
-            'data_path': practice_save_db
+            'data_path': practice_save_db,
+            'first_audio': first_audio
         }
 
         userPractice_db.document().set(user_practice_save_dto)
@@ -482,10 +484,12 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         temp_db_collection = 'temp/'+temp_save_id+'/'
         os.makedirs(upload_dir, exist_ok=True)
 
+        first_audio_db_collection = 'FirstUserVoice/' + audio_file.name
         # 텍스트 임시 저장
         text_save_dto = {
             'user_id': user_id,
-            'text': text
+            'text': text,
+            'first_audio': first_audio_db_collection
         }
         temp_text_ref = tempText_db.document(temp_save_id)
         temp_text_ref.set(text_save_dto)
@@ -525,8 +529,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         with open(user_voice_path, "rb") as audio_file:
             audio = audio_file.read()
 
-        audio_db_collection = 'filteredUserVoice/'
-        blob = bucket.blob(audio_db_collection + user_voice.filename)
+        blob = bucket.blob(first_audio_db_collection)
         blob.upload_from_string(audio, content_type="audio/wav")
 
         tts_sampling_rate, tts_data, pitch_values_tts, time_steps_tts = extract_pitch_from_tts(tts_voice_path)

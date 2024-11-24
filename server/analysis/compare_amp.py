@@ -40,7 +40,7 @@ def compare_amplitude_differences(user_word_intervals, tts_word_intervals, filte
 
             if max_amplitude_difference < max_amplitude_difference_temp :
               max_amplitude_difference = max_amplitude_difference_temp
-              max_diff_word = {"word": user_word['word']}
+              max_diff_word = {"word": user_word['word'], "idx": idx}
             if user_amplitude_difference - tts_amplitude_difference > threshold :
               user_threshold_exceeding_words.append({"word": user_word['word'], "idx": idx})
 
