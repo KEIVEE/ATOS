@@ -2,13 +2,18 @@ import requests
 import time
 from server.settings import TC_TTS_KEY
 
-actor_id = '658d1bc867f8ac8fa3cbbeec'
+#actor_id = '648aaee9248bcd37dad435e6'
 
 def getTCTTS(text):
-    url = "https://typecast.ai/api/speak"
     header = {
         'Authorization': f'Bearer {TC_TTS_KEY}'
-        }
+    }
+    r = requests.get('https://typecast.ai/api/actor', headers=header)
+    my_actors = r.json()['result']
+    my_actor = my_actors[0]
+    actor_id = my_actor['actor_id']
+
+    url = "https://typecast.ai/api/speak"
 
     r = requests.post(url, headers=header, json={
         'actor_id': actor_id, 
