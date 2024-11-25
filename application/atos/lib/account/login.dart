@@ -1,3 +1,5 @@
+//로그인 페이지
+
 import 'package:flutter/material.dart';
 import 'package:atos/managing/manage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,18 +16,21 @@ class LoginPage extends StatefulWidget {
 class LoginState extends State<LoginPage> {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
-  var id = "";
-  var password = "";
-  var loginTried = false;
-  var loginFailed = false;
+  var id = ""; // ID
+  var password = ""; // 비밀번호
+  var loginTried = false; // 로그인 시도 여부
+  var loginFailed = false; // 로그인 실패 여부
 
+//로그인 버튼을 눌렀을 때
   Future<void> signInWithEmailAndPassword() async {
     try {
+      //auth를 사용해서 로그인
       await firebaseAuth.signInWithEmailAndPassword(
         email: '$id@example.com',
         password: password,
       );
 
+      //로그인 api: 로그인 기록 남기기.
       http.get(
         Uri.parse('${ControlUri.BASE_URL}/login/$id'),
         headers: <String, String>{
@@ -33,10 +38,12 @@ class LoginState extends State<LoginPage> {
         },
       );
 
-      // 로그인 성공 시, 사용자 이름을 설정하고 페이지 이동
+      //로그인 성공 시 로그인 실패 메시지 제거
       setState(() {
         loginFailed = false;
       });
+
+      //관리 페이지로
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(

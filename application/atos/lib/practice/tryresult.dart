@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+//다시 연습한 결과를 보여주는 페이지
+//미완성. 하지만 show.dart와 같은 역할을 함
 
-// 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
+import 'package:flutter/material.dart';
 
 class TryResultPage extends StatefulWidget {
   const TryResultPage({super.key, required this.id});

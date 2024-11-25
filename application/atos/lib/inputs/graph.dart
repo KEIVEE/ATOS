@@ -1,20 +1,22 @@
-import 'dart:async';
+//그래프를 보여주는 페이지. content.dart와 show.dart의 내부에서 사용되는 페이지임
+//그래프는 단어 하나하나마다 보여줌
 
+import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class GraphPage extends StatefulWidget {
-  final List<FlSpot> userGraphData;
-  final List<FlSpot> ttsGraphData;
-  final List<FlSpot> userAmplitudeGraphData;
-  final List<FlSpot> ttsAmplitudeGraphData;
-  final double currentUserStart;
-  final double currentUserEnd;
-  final double currentTtsStart;
-  final double currentTtsEnd;
-  final String userAudioPath;
-  final String ttsAudioPath;
+  final List<FlSpot> userGraphData; //사용자의 pitch 데이터로 만든 그래프 지점
+  final List<FlSpot> ttsGraphData; //표준어의 pitch 데이터로 만든 그래프 지점
+  final List<FlSpot> userAmplitudeGraphData; //사용자의 amplitude 데이터로 만든 그래프 지점
+  final List<FlSpot> ttsAmplitudeGraphData; //표준어의 amplitude 데이터로 만든 그래프 지점
+  final double currentUserStart; //사용자의 해당 단어 타임스탬프 시작점
+  final double currentUserEnd; //사용자의 해당 단어 타임스탬프 끝점
+  final double currentTtsStart; //표준어의 해당 단어 타임스탬프 시작점
+  final double currentTtsEnd; //표준어의 해당 단어 타임스탬프 끝점
+  final String userAudioPath; //사용자의 음성 파일 경로
+  final String ttsAudioPath; //표준어의 음성 파일 경로
 
   const GraphPage({
     super.key,
@@ -44,6 +46,7 @@ class GraphState extends State<GraphPage> {
 
   final _audioPlayer = AudioPlayer();
 
+  //구간만 재생하는 함수
   Future<void> _playSegment(String path, double start, double end) async {
     await _audioPlayer.play(
       DeviceFileSource(path),
@@ -61,6 +64,7 @@ class GraphState extends State<GraphPage> {
     print(widget.currentTtsEnd);
     print(widget.currentTtsStart);
 
+    //그래프 데이터 설정
     userPitchGraph = LineChartBarData(
       spots: widget.userGraphData,
       isCurved: true,
@@ -144,7 +148,7 @@ class GraphState extends State<GraphPage> {
           type: BottomNavigationBarType.fixed,
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: SizedBox.shrink(),
+              icon: SizedBox.shrink(), // 아이콘 없음
               label: '피치 그래프',
             ),
             BottomNavigationBarItem(
@@ -160,7 +164,7 @@ class GraphState extends State<GraphPage> {
           showSelectedLabels: true,
           showUnselectedLabels: true,
           elevation: 0,
-          selectedItemColor: const Color.fromARGB(255, 118, 130, 197),
+          selectedItemColor: Colors.indigo,
           onTap: _onItemTapped,
         ),
       ),
@@ -199,6 +203,7 @@ class GraphState extends State<GraphPage> {
           gridData: FlGridData(show: true),
           titlesData: FlTitlesData(show: false),
           borderData: FlBorderData(show: true),
+          // y = 0이 중앙에 오도록 설정
           maxY: 20000,
           minY: -20000,
           lineBarsData: [

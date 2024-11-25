@@ -1,3 +1,5 @@
+//본인이 저장한 목록을 보여주는 페이지
+
 import 'dart:convert';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,7 @@ class PracticeState extends State<PracticePage> {
     _futureData = _fetchData();
   }
 
+  //자기 id로 된 목록을 가져옴
   Future<List<dynamic>> _fetchData() async {
     final response = await http.get(
         Uri.parse('${ControlUri.BASE_URL}/get-user-practice/${widget.id}'));
@@ -46,17 +49,20 @@ class PracticeState extends State<PracticePage> {
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Text('No data available');
+              return Text('저장된 데이터가 없습니다.');
             } else {
               return ListView.builder(
                 itemCount: snapshot.data!.length,
                 itemBuilder: (context, index) {
                   var item = snapshot.data![index];
+                  //연습목록마다 버튼을 생성
                   return TitleButton(
-                      title: item['title'],
-                      sentence: item['text'],
-                      id: widget.id,
-                      path: item['data_path']);
+                    title: item['title'],
+                    sentence: item['text'],
+                    id: widget.id,
+                    path: item['data_path'], //firebase storage에 저장된 경로.
+                    //분석 json, TTS음성, 유저음성이 담겨 있음
+                  );
                 },
               );
             }

@@ -1,3 +1,4 @@
+//텍스트 등록 페이지
 import 'package:flutter/material.dart';
 import 'package:atos/inputs/translating.dart';
 
@@ -10,11 +11,10 @@ class AddPage extends StatefulWidget {
 }
 
 class AddState extends State<AddPage> {
-  var inputText = '';
-  var region = '';
-  var translatedText = '';
-  bool willTranslate = true;
-  String selectedTheme = '차분한';
+  var inputText = ''; //입력한 텍스트
+  var region = ''; //본인 지역
+  bool willTranslate = true; //번역을 할 건가
+  String selectedTheme = '차분한'; //테마
 
   @override
   Widget build(BuildContext context) {

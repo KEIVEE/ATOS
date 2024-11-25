@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-//import 'package:atos/practice/reanalyzing.dart';
+//다시 연습하는 페이지
+//미완성. 하지만 translated.dart와 하는 역할이 비슷함
 
-// 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
+import 'package:flutter/material.dart';
 
 class TryPage extends StatefulWidget {
   const TryPage({super.key, required this.id});

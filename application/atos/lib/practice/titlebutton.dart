@@ -1,3 +1,5 @@
+//연습 하나마다 버튼을 만들어주는 클래스
+
 import 'package:atos/practice/content.dart';
 import 'package:flutter/material.dart';
 
@@ -9,10 +11,10 @@ class TitleButton extends StatelessWidget {
 
   const TitleButton(
       {super.key,
-      required this.title,
-      required this.id,
-      required this.sentence,
-      required this.path});
+      required this.title, //제목
+      required this.id, //유저 아이디
+      required this.sentence, //문장
+      required this.path}); //파일 저장 경로
 
   @override
   Widget build(BuildContext context) {

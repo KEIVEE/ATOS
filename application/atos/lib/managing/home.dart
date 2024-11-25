@@ -1,3 +1,6 @@
+//오늘의 문장, 잔디심기(깃허브에 있는거처럼), 설정 버튼을 가진 화면
+//login.dart에서 로그인 기록을 저장하는 이유가 잔디심기임
+
 import 'package:flutter/material.dart';
 import 'package:atos/account/setting.dart';
 import 'package:firebase_auth/firebase_auth.dart';

@@ -1,3 +1,5 @@
+// 최고피치 최저피치 기록 페이지
+
 import 'dart:io';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +19,8 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   bool _isRecordingLow = false;
   bool _isRecordingHigh = false;
-  String _lowPitchPath = '';
-  String _highPitchPath = '';
+  String _lowPitchPath = ''; // 저음 파일 경로
+  String _highPitchPath = ''; // 고음 파일 경로
 
   @override
   void initState() {
@@ -26,6 +28,7 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     _initRecorder();
   }
 
+  //권한 요청하고 녹음기 초기화
   Future<void> _initRecorder() async {
     var status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
@@ -38,43 +41,46 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     await _recorder.openRecorder();
   }
 
+  //녹음 시작
   Future<void> _startRecording(String pitch) async {
     final path = '${Directory.systemTemp.path}/pitch.wav';
     await _recorder.startRecorder(toFile: path);
     setState(() {
       if (pitch == 'low') {
-      _isRecordingLow = true;
-      _lowPitchPath = path;
+        _isRecordingLow = true;
+        _lowPitchPath = path;
       } else {
-      _isRecordingHigh = true;
-      _highPitchPath = path;
+        _isRecordingHigh = true;
+        _highPitchPath = path;
       }
     });
   }
 
+  //녹음 끝내기
   Future<void> _stopRecording(String pitch) async {
     await _recorder.stopRecorder();
     setState(() {
       if (pitch == 'low') {
-      _isRecordingLow = false;
+        _isRecordingLow = false;
       } else {
-      _isRecordingHigh = false;
+        _isRecordingHigh = false;
       }
     });
   }
 
+  //음성 데이터 서버로 전송
   Future<void> _sendVoiceData() async {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${ControlUri.BASE_URL}/set-user-pitch'),
     );
 
-    // Add files
+    //멀티파트 전송
     request.files.add(await http.MultipartFile.fromPath('low', _lowPitchPath));
     request.files
         .add(await http.MultipartFile.fromPath('high', _highPitchPath));
 
-    // Add user ID as field
+    //ID도 같이 전송
     request.fields['user_id'] = widget.id;
 
     try {
@@ -89,11 +95,12 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
         );
       }
 
+      //가입이 끝났으니 초기화면 = main.dart로 이동
       if (mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
     }
   }
 

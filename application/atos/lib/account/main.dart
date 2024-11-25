@@ -1,3 +1,8 @@
+//메인 화면. MVVM 해보고 싶지만 시간이 좀 부족할 듯
+//control이라는 폴더는 만들어 놨는데 로직 처리를 분리하지는 않았음
+//IP를 가리기 위해서 uri.dart에 있는 ControlUri.BASE_URL을 사용하는 경우가 있음
+//uri.dart는 gitignore에 추가해서 ip를 가림
+
 import 'package:flutter/material.dart';
 import 'package:atos/account/login.dart';
 import 'package:atos/account/register.dart';

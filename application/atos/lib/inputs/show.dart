@@ -1,11 +1,11 @@
+//분석 결과를 보여주는 페이지
+//미완성. content.dart의 코드를 거의 그대로 사용할 예정
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
-//import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:atos/control/uri.dart';
 import 'package:audioplayers/audioplayers.dart';
-
-// 화면들을 모아놓는? 페이지. 아래 버튼들 클릭하면 해당 화면으로 이동하도록.
 
 class ShowPage extends StatefulWidget {
   const ShowPage(
@@ -28,15 +28,16 @@ class ShowPage extends StatefulWidget {
 
 class ShowState extends State<ShowPage> {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  var title = '';
+  var title = ''; //연습을 저장할 거라면 연습 제목이 필요함
 
   Map<String, String> headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
 
-  Map<String, dynamic> jsonData = {};
+  //Map<String, dynamic> jsonData = {}; //분석 결과
 
+  //저장할 연습 제목을 입력받는 팝업
   Future<void> showTitleInputDialog() async {
     final TextEditingController titleController = TextEditingController();
 
@@ -89,6 +90,7 @@ class ShowState extends State<ShowPage> {
     getZip();
   }
 
+  //연습을 저장할 때
   Future<void> saveResult() async {
     try {
       if (title.isEmpty) {
@@ -96,6 +98,7 @@ class ShowState extends State<ShowPage> {
         return;
       }
 
+      //제목이 있으면 저장api 호출
       final response = await http.post(
         Uri.parse('${ControlUri.BASE_URL}/save-user-practice'),
         headers: headers,
@@ -125,6 +128,9 @@ class ShowState extends State<ShowPage> {
     }
   }
 
+  //분석 결과 json이 커서 원래는 gzip으로 받으려고 했는데,
+  //압축파일을 풀 때 문제가 생겨서 그냥 json으로 받기로 함
+  //함수 이름이 getZip이 된 이유
   Future<void> getZip() async {
     try {
       // HTTP GET 요청으로 JSON 데이터 다운로드
@@ -137,28 +143,7 @@ class ShowState extends State<ShowPage> {
         try {
           // 응답 데이터 가져오기
           String jsonString = response.body;
-          print(jsonString.length);
-
-          // JSON 파싱
-          Map<String, dynamic> jsonData = jsonDecode(jsonString);
-
-          print(jsonData['results']);
-
-          print(jsonData);
-          //debugPrint('JSON 데이터: $jsonData');
-
-          // 다운로드 디렉토리 경로 가져오기
-          // Directory? downloadsDirectory = await getExternalStorageDirectory();
-          // if (downloadsDirectory != null) {
-          //   String downloadsPath = downloadsDirectory.path;
-          //   String filePath = '$downloadsPath/response.json';
-
-          //   // 데이터 파일로 저장
-          //   File(filePath).writeAsStringSync(jsonString);
-          //   debugPrint('파일이 저장되었습니다: $filePath');
-          // } else {
-          //   debugPrint('다운로드 디렉토리를 찾을 수 없습니다.');
-          // }
+          debugPrint(jsonString.length.toString());
         } catch (e) {
           debugPrint('데이터 처리 중 오류 발생: $e');
         }
@@ -204,6 +189,8 @@ class ShowState extends State<ShowPage> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
                 child: const Text('내 발음 듣기')),
+
+            //홈으로 가기 버튼. 저장하지 않고 이 버튼을 누르면 연습목록에 이 분석 결과는 추가되지 않음
             OutlinedButton(
                 onPressed: () {
                   Navigator.popUntil(context, (route) {
@@ -213,11 +200,9 @@ class ShowState extends State<ShowPage> {
                 style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0))),
-                child: const Text('홈으로 가기 = 연습목록에 추가하지 않기')),
+                child: const Text('홈으로 가기')),
             OutlinedButton(
-              onPressed: () {
-                showTitleInputDialog();
-              },
+              onPressed: showTitleInputDialog,
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
@@ -225,15 +210,6 @@ class ShowState extends State<ShowPage> {
               ),
               child: const Text('연습목록에 추가'),
             ),
-
-            Text(jsonData['results'].toString()),
-            const Text('양옆으로 바꿀 거임. 아니면 양옆 늘려서 이대로 가던가, 아이콘으로 바꾸던가?'),
-            // OutlinedButton(
-            //     onPressed: getZip,
-            //     style: OutlinedButton.styleFrom(
-            //         shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(10.0))),
-            //     child: const Text('zip파일 테스트')),
           ],
         ),
       ),

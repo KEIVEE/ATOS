@@ -1,16 +1,14 @@
+//번역 결과를 보여주고 음성 녹음까지 하는 페이지
+
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart' as sound;
 import 'package:permission_handler/permission_handler.dart';
-//import 'package:http/http.dart' as http; // HTTP 요청을 위한 패키지
-//import 'dart:io'; // File 객체 사용
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-//import 'package:atos/inputs/inputanalyzing.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
 import 'inputanalyzing.dart';
-//import 'package:atos/control/uri.dart';
 
 // TranslatedPage는 음성 녹음 및 업로드와 관련된 기능을 포함하는 StatefulWidget
 class TranslatedPage extends StatefulWidget {
@@ -21,9 +19,9 @@ class TranslatedPage extends StatefulWidget {
       required this.audioName,
       required this.translate});
   final String id;
-  final String translatedText;
-  final String audioName;
-  final bool translate;
+  final String translatedText; // 번역된 텍스트
+  final String audioName; // TTS 파일 경로
+  final bool translate; // 번역 여부
 
   @override
   State<TranslatedPage> createState() => _TranslatedState();
@@ -43,7 +41,7 @@ class _TranslatedState extends State<TranslatedPage> {
 
   Future<void> _playAudio() async {
     try {
-      // 오디오 플레이어를 통해 음성 파일 재생
+      // 오디오 플레이어를 통해 TTS음성 파일 재생
       await _audioPlayer.play(UrlSource(downloadURL));
     } catch (e) {
       debugPrint("오디오 재생 오류: $e");
@@ -64,6 +62,7 @@ class _TranslatedState extends State<TranslatedPage> {
     }
   }
 
+  //파일 다운로드 하기. 앱 내부 스토리지에 함
   Future<void> downloadAndSaveTTSFile() async {
     try {
       // 다운로드할 파일의 경로 설정
@@ -143,53 +142,6 @@ class _TranslatedState extends State<TranslatedPage> {
     }
   }
 
-  // // 서버에 음성 파일을 업로드하는 메소드
-  // Future<void> _uploadAudioFile(File userAudio, File standardAudio) async {
-  //   const String apiUrl = '${ControlUri.BASE_URL}/'; // 서버 API URL
-  //   try {
-  //     // 현재 시각을 가져옵니다.
-  //     //String currentTime = DateTime.now().toIso8601String();
-
-  //     // HTTP 요청을 생성
-  //     var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-  //     request.files.add(await http.MultipartFile.fromPath(
-  //       'user_voice', // 서버에서 받을 필드 이름
-  //       userAudio.path, // 파일 경로
-  //     ));
-  //     request.files.add(await http.MultipartFile.fromPath(
-  //       'user_voice', // 서버에서 받을 필드 이름
-  //       standardAudio.path, // 파일 경로
-  //     ));
-  //     request.fields['user_id'] = widget.id; // 사용자 ID 필드 추가
-  //     request.fields['text'] = widget.translatedText;
-
-  //     // 요청을 전송하고 응답을 받음
-  //     var response = await request.send();
-  //     if (mounted) {
-  //       // 위젯이 여전히 화면에 있으면
-  //       if (response.statusCode == 200) {
-  //         // 업로드 성공 시
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text('음성 파일 업로드 성공!')),
-  //         );
-  //       } else {
-  //         // 업로드 실패 시
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text('업로드 실패: ${response.statusCode}')),
-  //         );
-  //       }
-  //     }
-  //   } catch (e) {
-  //     // 업로드 중 오류가 발생한 경우
-  //     if (mounted) {
-  //       // 위젯이 여전히 화면에 있으면
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('업로드 중 오류 발생: $e')),
-  //       );
-  //     }
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,16 +173,15 @@ class _TranslatedState extends State<TranslatedPage> {
             const SizedBox(height: 20),
             // 분석 시작 버튼
             OutlinedButton(
-              onPressed: () /*async*/ {
-                // await uploadAudioFile(
-                //     File(recordedFilePath), File(standardFilePath));
+              onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
+                    //translating.dart처럼 실제로 post요청은 inputanalyzing.dart에서 함
                     settings: const RouteSettings(name: "/inputanalyzing"),
                     builder: (context) => InputAnalyzingPage(
-                        id: widget.id,
-                        inputText: widget.translatedText,
-                        userVoicePath: recordedFilePath,
-                        ttsVoicePath: standardFilePath)));
+                        id: widget.id, //요청을 하기 위한 인자들은
+                        inputText: widget.translatedText, //텍스트
+                        userVoicePath: recordedFilePath, //녹음 파일 경로
+                        ttsVoicePath: standardFilePath))); // TTS 파일 경로
               },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -249,7 +200,6 @@ class _TranslatedState extends State<TranslatedPage> {
               ),
               iconSize: 80,
             ),
-            const Text('양옆으로 바꿀 거임. 아니면 녹음 화면을 따로 만들던가?'),
 
             OutlinedButton(
               onPressed: _playAudio,

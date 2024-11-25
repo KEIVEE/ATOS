@@ -10,9 +10,9 @@ class InputAnalyzingPage extends StatefulWidget {
   const InputAnalyzingPage({
     super.key,
     required this.id,
-    required this.inputText,
-    required this.userVoicePath,
-    required this.ttsVoicePath,
+    required this.inputText, // 텍스트
+    required this.userVoicePath, // 사용자 음성 파일 경로. 앱 내부 경로임
+    required this.ttsVoicePath, // TTS 음성 파일 경로. 앱 내부 경로임
   });
 
   final String id;
@@ -30,25 +30,19 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  //Map<String, String> headers = {
-  //'Content-Type': 'multipart/form-data',
-  //'Accept': 'application/gzip',
-  //'Accept-Encoding': 'gzip',
-  // };
-
   Future<void> _processRequest() async {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${ControlUri.BASE_URL}/voice-analysis'),
     );
 
-    // Add files
+    // 멀티파트 요청에 필요한 파일
     request.files.add(
         await http.MultipartFile.fromPath('tts_voice', widget.ttsVoicePath));
     request.files.add(
         await http.MultipartFile.fromPath('user_voice', widget.userVoicePath));
 
-    // Add user ID as field
+    // 나머지 필요한 필드들
     request.fields['text'] = widget.inputText;
     request.fields['user_id'] = widget.id;
 
@@ -56,21 +50,20 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        //뭘 넘겨줄 것인가
+        //show.dart에 뭘 넘겨줄 것인가
         final responseBody = await response.stream.bytesToString();
         final responseJson = jsonDecode(responseBody);
 
-        //debugPrint(responseData.toString());
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               settings: const RouteSettings(name: "/show"),
               builder: (context) => ShowPage(
                   id: widget.id,
-                  text: widget.inputText,
-                  ttsAudio: widget.ttsVoicePath,
-                  userAudio: widget.userVoicePath,
-                  result: responseJson['temp_id']),
+                  text: widget.inputText, //텍스트
+                  ttsAudio: widget.ttsVoicePath, //TTS 음성 파일 경로
+                  userAudio: widget.userVoicePath, //사용자 음성 파일 경로
+                  result: responseJson['temp_id']), //결과가 저장된 파이어베이스 경로
             ),
           );
         }
@@ -106,10 +99,10 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
             children: <Widget>[
               Text('분석중이에요'),
               SizedBox(
-                width: 100, // 원하는 너비
-                height: 100, // 원하는 높이
+                width: 100,
+                height: 100,
                 child: CircularProgressIndicator(
-                  strokeWidth: 10, // 두께 조절
+                  strokeWidth: 10,
                 ),
               ),
             ],

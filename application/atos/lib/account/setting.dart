@@ -33,8 +33,8 @@ class SettingState extends State<SettingPage> {
   bool _isRecordingHigh = false;
   String _lowPitchPath = '';
   String _highPitchPath = '';
-  bool lowTried = false;
-  bool highTried = false;
+  bool lowTried = false; // 저음 녹음 시도 여부
+  bool highTried = false; // 고음 녹음 시도 여부
   bool nicknameVacant = true;
 
   @override
@@ -46,6 +46,7 @@ class SettingState extends State<SettingPage> {
     _initRecorder();
   }
 
+  // 지역 가지고 오기. api로 받아와도 되는데 아직 변경하지 않음
   Future<void> _fetchRegion() async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -57,11 +58,12 @@ class SettingState extends State<SettingPage> {
     }
   }
 
+  //지역 업데이트하기
   Future<void> _updateRegion(String newRegion) async {
     User? user = _auth.currentUser;
     if (user != null) {
       final response = await http.post(
-        Uri.parse('${ControlUri.BASE_URL}/set-user-region'), // 실제 서버 URL로 변경
+        Uri.parse('${ControlUri.BASE_URL}/set-user-region'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'user_id': widget.id,
@@ -86,6 +88,7 @@ class SettingState extends State<SettingPage> {
     }
   }
 
+  //닉네임 변경 텍스트필드 기본값 설정하기
   Future<void> _initializeNickname() async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -110,6 +113,7 @@ class SettingState extends State<SettingPage> {
     );
   }
 
+  //녹음기 권한 받아와서 시작하기
   Future<void> _initRecorder() async {
     var status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
@@ -155,7 +159,7 @@ class SettingState extends State<SettingPage> {
   Future<void> _stopHighRecording() async {
     setState(() {
       _isRecordingHigh = false;
-      highTried = true;
+      highTried = true; //시도를 해야 저장 버튼을 누를 수 있게 함. 초기값은 false
     });
     await _recorder.stopRecorder();
   }
@@ -209,7 +213,7 @@ class SettingState extends State<SettingPage> {
     }
   }
 
-  // 저음 변경 다이얼로그
+  // 저음 변경 팝업
   Future<void> _showLowPitchDialog() async {
     showDialog(
       context: context,
@@ -225,11 +229,9 @@ class SettingState extends State<SettingPage> {
                     onPressed: _isRecordingLow
                         ? () {
                             _stopLowRecording();
-                            setState(() {}); // 녹음 중지 후 상태 업데이트
                           }
                         : () {
                             _startRecordingLow();
-                            setState(() {}); // 녹음 시작 후 상태 업데이트
                           },
                     child: Text(_isRecordingLow ? '녹음 그만하기' : '녹음하기'),
                   ),
@@ -257,7 +259,7 @@ class SettingState extends State<SettingPage> {
     );
   }
 
-  // 고음 변경 다이얼로그
+  // 고음 변경 팝업
   Future<void> _showHighPitchDialog() async {
     showDialog(
       context: context,
