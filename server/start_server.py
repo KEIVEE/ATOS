@@ -39,6 +39,7 @@ import whisperx
 if not firebase_admin._apps:  # 이미 초기화된 앱이 없으면 초기화
     server_init.init_server()
 
+# swagger ui 설정
 SWAGGER_HEADERS = {
     "title": "ATOS API List",
     "version": "v593",
@@ -83,7 +84,7 @@ userPractice_db = db.collection('userPractice')
 
 @app.on_event("startup")
 async def startup_event():
-    load_models()
+    load_models() # 시작할 때 whisperx 모델 로드 후 저장
 
 @app.get('/login/{user_id}',description='로그인 기록 저장(로그인 후 호출하기)\n날짜별 하나만 저장 가능', tags=['User api'])
 async def login(user_id: str): 
@@ -183,7 +184,7 @@ async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(..
         low_pitch = get_pitch_median(low_voice_path)
         high_pitch = get_pitch_median(high_voice_path)
 
-        low_pitch = max(50, low_pitch)
+        low_pitch = max(50, low_pitch) # 목소리 임계값 설정
         high_pitch = min(300, high_pitch)
 
         user_pitch_save_dto = {
@@ -259,6 +260,7 @@ async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...))
 
 @app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성', tags=['TTS api']) 
 async def translate_text(request: TransTextDTO):
+    # 텍스트 번역 후 테마에 맞추어 TTS 생성
     try:
         text_save_dto = {
             'text': request.text,
@@ -309,6 +311,7 @@ async def translate_text(request: TransTextDTO):
                   "content": {"audio/wav": {}}
                   }}, tags=['TTS api'])
 async def get_tts(request: GetTTSReqDTO): 
+    # 텍스트 번역을 하지 않고 바로 TTS 생성
     try:
         trans_text_save_dto = {
             'user_id': request.user_id,
@@ -402,6 +405,7 @@ async def get_user_practice(user_id : str) :
     
 @app.get("/get-user-practice-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['Practice api'])
 async def get_user_practice_data(data_path: str):
+    # 사용자의 연습 기록을 반환 (플러터에서 ZIP 파일 해제에 문제가 있어 일단 보류)
     try:
         blob = bucket.blob(data_path + 'userVoice.wav')
         blob2 = bucket.blob(data_path + 'ttsVoice.wav')
@@ -425,6 +429,8 @@ async def get_user_practice_data(data_path: str):
     
 @app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['Practice api'])
 async def save_user_practice(request: SavePracticeDTO):
+    # Temp 디비에 있는 데이터들을 userPractice 디비로 이동 (정식적으로 저장)
+    # Temp 디비에 있는 데이터 삭제는 안함
     try:
         text = tempText_db.document(str(request.temp_id)).get().to_dict().get('text')
         first_audio = tempText_db.document(str(request.temp_id)).get().to_dict().get('first_audio')
@@ -463,7 +469,7 @@ async def save_user_practice(request: SavePracticeDTO):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get("/get-analysis-data/{data_path}", description="temp에서 사용자의 분석 데이터 return. 분석 결과를 압축한 gzip파일 리턴", tags=['Analysis api'])
+@app.get("/get-analysis-data/{data_path}", description="temp에서 사용자의 분석 데이터 return. 분석 결과를 json 파일로 리턴", tags=['Analysis api'])
 async def get_analysis_data(data_path: str):
     try:
         
@@ -478,6 +484,10 @@ async def get_analysis_data(data_path: str):
 
 @app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'], response_model=VoiceAnalysisResponse2)
 async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
+    # 사용자 음성, TTS 음성, 분석 결과는 Temp(임시 디비)에 저장됨
+    # 나중에 사용자가 저장한다고 하면 Temp -> userPractice로 데이터 이동
+    # 첫 음성 파일이 있다면 저장하지 않도록 하는 기능도 추가하기 (아니면 api 새로 만들어도 될듯)
+    # TTS, 사용자 음성 비교 할 때 사용할 threshold 값 정하기
     try :
         temp_save_id = user_id + str(datetime.now().strftime("%Y%m%d%H%M%S"))
         upload_dir = "server/filtered_audio"
@@ -485,7 +495,8 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         os.makedirs(upload_dir, exist_ok=True)
 
         first_audio_db_collection = 'FirstUserVoice/' + user_voice.filename
-        # 텍스트 임시 저장
+
+        # 텍스트, 사용자의 첫 음성파일 위치 임시 저장
         text_save_dto = {
             'user_id': user_id,
             'text': text,
@@ -494,18 +505,12 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         temp_text_ref = tempText_db.document(temp_save_id)
         temp_text_ref.set(text_save_dto)
 
-        # user_voice 파일 저장
+        # user_voice 파일 로컬 저장
         user_voice_path = os.path.join(upload_dir, user_voice.filename)
         with open(user_voice_path, "wb") as buffer:
             shutil.copyfileobj(user_voice.file, buffer)
 
-        with open(user_voice_path, "rb") as audio_file:
-            audio = audio_file.read()
-        
-        blob = bucket.blob(temp_db_collection + 'userVoice.wav')
-        blob.upload_from_string(audio, content_type="audio/wav")
-
-        # tts_voice 파일 저장
+        # tts_voice 파일 로컬 저장 후 Temp에 저장
         tts_voice_path = os.path.join(upload_dir, tts_voice.filename)
         with open(tts_voice_path, "wb") as buffer:
             shutil.copyfileobj(tts_voice.file, buffer)
@@ -520,23 +525,33 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         if not user_doc.exists:
             raise HTTPException(status_code=404, detail="User not found")
 
+        # 음성 필터링을 위한 사용자 pitch 값 가져오기
         user_data = user_doc.to_dict()
         low = min(user_data.get('low_pitch'),user_data.get('high_pitch'))
         high = max(user_data.get('low_pitch'),user_data.get('high_pitch'))
 
+        # 음성 필터링(노이즈 제거)하고 피치, 진폭 추출
         sampling_rate, filtered_data, pitch_values, time_steps = process_and_save_filtered_audio(input_file_path=user_voice_path, human_voice_range=(low-10, high+10))
 
         with open(user_voice_path, "rb") as audio_file:
             audio = audio_file.read()
 
+        # 사용자의 첫 음성 파일 저장
         blob = bucket.blob(first_audio_db_collection)
         blob.upload_from_string(audio, content_type="audio/wav")
+        
+        # Temp 에 필터링 된 사용자 음성 저장
+        blob = bucket.blob(temp_db_collection + 'userVoice.wav')
+        blob.upload_from_string(audio, content_type="audio/wav")
 
+        # TTS 피치, 진폭 추출
         tts_sampling_rate, tts_data, pitch_values_tts, time_steps_tts = extract_pitch_from_tts(tts_voice_path)
 
+        # TTS, 사용자 타임스탬프 추출
         word_intervals = cal_timestamp(extract_word_timestamps(user_voice_path))
         tts_word_intervals = extract_word_timestamps(tts_voice_path)
 
+        # TTS, 사용자 타임스탬프 보정
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_word_intervals = executor.submit(ts_cal, word_intervals, text)
             future_tts_word_intervals = executor.submit(ts_cal, tts_word_intervals, text)
@@ -544,20 +559,25 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             word_intervals = future_word_intervals.result()
             tts_word_intervals = future_tts_word_intervals.result()
 
-        threshold_value = 5600
+        
+        threshold_value = 5600 # 적절한 값 정하기
+
+        # TTS, 사용자 진폭 비교 
         comp_amp_result, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
 
+        # TTS, 사용자 피치 비교
         comp_pitch_result = calculate_pitch_differences(
         word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
 
-        # 세그먼트 비교
+        # 세그먼트 비교(일단 안씀)
         # highest_segment, lowest_segment = compare_segments(
         #     word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
         # )
 
+        # TTS, 사용자 이웃한 단어와의 피치 변화 비교
         results = compare_pitch_differences(word_intervals, pitch_values, tts_word_intervals, pitch_values_tts,time_steps,time_steps_tts, threshold=20)
      
-        # 파일 삭제
+        # 로컬 파일 삭제
         os.remove(user_voice_path)
         os.remove(tts_voice_path)
 
@@ -580,17 +600,19 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             'results': results
         }
 
+        # gzip이 효율이 좋지만 압축 해제에서 문제가 생겨 일단 json으로 저장
         # gzip_buffer = BytesIO()
         # with gzip.GzipFile(fileobj=gzip_buffer, mode='w') as f:
         #     f.write(json.dumps(result).encode('utf-8'))
-        json_str = json.dumps(result)
-        # Gzip 파일을 Firebase Storage에 업로드
+        json_str = json.dumps(result) # 분석 결과 json으로 만들기
         # gzip_buffer.seek(0)
+
+        # 분석 결과 Temp에 저장
         blob = bucket.blob(f"{temp_db_collection}analysis.json")
         blob.upload_from_string(json_str, content_type="application/json")
 
         response = {
-            'temp_id': temp_save_id
+            'temp_id': temp_save_id # Temp 디비 위치 리턴
         }
         # def iterfile():
         #     gzip_buffer.seek(0)
