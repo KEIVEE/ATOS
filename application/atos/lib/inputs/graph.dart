@@ -17,6 +17,9 @@ class GraphPage extends StatefulWidget {
   final double currentTtsEnd; //표준어의 해당 단어 타임스탬프 끝점
   final String userAudioPath; //사용자의 음성 파일 경로
   final String ttsAudioPath; //표준어의 음성 파일 경로
+  final int pitchFeedback; //피치 피드백
+  final int amplitudeFeedback; //진폭 피드백
+  final int previousPitchFeedback; //이전 단어 피치 피드백
 
   const GraphPage({
     super.key,
@@ -30,6 +33,9 @@ class GraphPage extends StatefulWidget {
     required this.currentTtsEnd,
     required this.userAudioPath,
     required this.ttsAudioPath,
+    required this.pitchFeedback,
+    required this.amplitudeFeedback,
+    required this.previousPitchFeedback,
   });
 
   @override
@@ -59,12 +65,6 @@ class GraphState extends State<GraphPage> {
 
   @override
   void initState() {
-    super.initState();
-    print(widget.userAudioPath);
-    print(widget.currentTtsEnd);
-    print(widget.currentTtsStart);
-
-    //그래프 데이터 설정
     userPitchGraph = LineChartBarData(
       spots: widget.userGraphData,
       isCurved: true,
@@ -93,6 +93,8 @@ class GraphState extends State<GraphPage> {
       barWidth: 1,
       dotData: FlDotData(show: false),
     );
+    super.initState();
+    //그래프 데이터 설정
   }
 
   void _onItemTapped(int index) {
@@ -122,21 +124,125 @@ class GraphState extends State<GraphPage> {
               child: _getWidgetOptions().elementAt(_selectedIndex),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              _playSegment(widget.ttsAudioPath, widget.currentTtsStart,
-                  widget.currentTtsEnd);
-            },
-            child: Text("표준어 들어보기"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  _playSegment(widget.ttsAudioPath, widget.currentTtsStart,
+                      widget.currentTtsEnd);
+                },
+                child: Text("표준어 들어보기"),
+              ),
+              SizedBox(width: 16),
+              // 내 목소리 들어보기 버튼
+              ElevatedButton(
+                onPressed: () {
+                  _playSegment(widget.userAudioPath, widget.currentUserStart,
+                      widget.currentUserEnd);
+                },
+                child: Text("내 목소리 들어보기"),
+              ),
+            ],
           ),
-          // 내 목소리 들어보기 버튼
-          ElevatedButton(
-            onPressed: () {
-              _playSegment(widget.userAudioPath, widget.currentUserStart,
-                  widget.currentUserEnd);
-            },
-            child: Text("내 목소리 들어보기"),
+          SizedBox(
+            //color: Colors.grey,
+            child: Column(
+              children: [
+                if (widget.pitchFeedback == 1)
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: Colors.white70,
+                      borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
+                    ),
+                    //color: Colors.grey,
+                    child: Text(
+                      '표준어에 비해 높낮이 변화가 커요.\n더 부드럽게 발음해보세요.',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (widget.pitchFeedback == -1)
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
+                    ),
+                    //color: Colors.grey,
+                    child: Text(
+                      '표준어에 비해 높낮이 변화가 작아요.\n더 다양한 톤으로 발음해보세요.',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (widget.amplitudeFeedback == 1)
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
+                    ),
+                    //color: Colors.grey,
+                    child: Text(
+                      '표준어에 비해 음량 변화가 커요.\n더 부드럽게 발음해보세요.',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (widget.amplitudeFeedback == -1)
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
+                    ),
+                    //color: Colors.grey,
+                    child: Text(
+                      '표준어에 비해 음량 변화가 작아요.\n더 다양한 음량으로 발음해보세요.',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (widget.previousPitchFeedback == 1)
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
+                    ),
+                    //color: Colors.grey,
+                    child: Text(
+                      '이전 단어보다 너무 높아졌어요.\n좀 더 낮춰서 발음해보세요.',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (widget.previousPitchFeedback == -1)
+                  Container(
+                    padding: EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
+                    ),
+                    //color: Colors.grey,
+                    child: Text(
+                      '이전 단어보다 너무 낮아졌어요.\n좀 더 높여서 발음해보세요.',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
+
           //Text(widget.userAudioPath),
         ],
       ),

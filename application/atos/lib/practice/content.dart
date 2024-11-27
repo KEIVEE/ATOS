@@ -54,14 +54,27 @@ class ContentState extends State<ContentPage> {
   List<double> ttsAmplitudeValues = [];
   List<String> feedbacks = [];
   List<int> results = [];
+  List<int> pitchComparisons = [];
+  List<int> amplitudeComparisons = [];
   int userSamplingRate = 0;
   int ttsSamplingRate = 0;
 
-  //선택된 단어의 시작점과 끝점
+  //선택된 단어의 시작점과 끝점, 담을 메시지
   double currentuserStart = 0.0;
   double currentuserEnd = 0.0;
   double currentttsStart = 0.0;
   double currentttsEnd = 0.0;
+  int currentPitchComparison = 0;
+  int currentAmplitudeComparison = 0;
+  int currentResults = 0;
+
+  //화살표
+  final List<Icon> arrows = [
+    Icon(Icons.arrow_upward, color: Colors.red, size: 20),
+    Icon(Icons.arrow_downward, color: Colors.red, size: 20),
+    Icon(Icons.arrow_upward, color: Colors.blue, size: 20),
+    Icon(Icons.arrow_downward, color: Colors.blue, size: 20),
+  ];
 
   @override
   void initState() {
@@ -164,6 +177,14 @@ class ContentState extends State<ContentPage> {
                   ?.map((e) => (e as num).toInt())
                   .toList() ??
               []; // If null, assign an empty list
+          pitchComparisons = (data['comp_pitch_result'] as List<dynamic>?)
+                  ?.map((e) => (e as num).toInt())
+                  .toList() ??
+              []; // If null, assign an empty list
+          amplitudeComparisons = (data['comp_amp_result'] as List<dynamic>?)
+                  ?.map((e) => (e as num).toInt())
+                  .toList() ??
+              []; // If null, assign an empty list
         });
       } else {
         debugPrint('JSON 파일이 존재하지 않습니다.');
@@ -227,9 +248,31 @@ class ContentState extends State<ContentPage> {
                     currentuserEnd = userEnd;
                     currentttsStart = ttsStart;
                     currentttsEnd = ttsEnd;
+
+                    //메시지를 담음
+                    currentPitchComparison = pitchComparisons[i];
+                    currentAmplitudeComparison = amplitudeComparisons[i];
+                    if (i == 0) {
+                      currentResults = 0;
+                    } else {
+                      currentResults = results[i - 1];
+                    }
                   });
                 },
                 child: Text(word, style: const TextStyle(fontSize: 20)),
+              ),
+              SizedBox(
+                height: 10,
+                width: 40,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (pitchComparisons[i] == 1) arrows[0],
+                    if (pitchComparisons[i] == -1) arrows[1],
+                    if (amplitudeComparisons[i] == 1) arrows[2],
+                    if (amplitudeComparisons[i] == -1) arrows[3]
+                  ],
+                ),
               ),
             ],
           ),
@@ -310,12 +353,15 @@ class ContentState extends State<ContentPage> {
       double userStart, double userEnd, double ttsStart, double ttsEnd) {
     userGraphData = [];
     ttsGraphData = [];
+    //print(userStart);
+    //print(ttsStart);
 
     // 유저 피치 값
     for (int i = 0; i < userTimeSteps.length; i++) {
       if (userTimeSteps[i] >= userStart &&
           userTimeSteps[i] <= userEnd &&
           userPitchValues[i] != 0) {
+        //print(userTimeSteps[i]);
         userGraphData
             .add(FlSpot(userTimeSteps[i] - userStart, userPitchValues[i]));
       }
@@ -356,7 +402,7 @@ class ContentState extends State<ContentPage> {
               child: Column(
                 children: [
                   SizedBox(
-                    height: 450,
+                    height: 550,
                     width: double.infinity,
                     child: userGraphData.isEmpty
                         ? Center(child: Text('단어를 선택하세요'))
@@ -372,12 +418,16 @@ class ContentState extends State<ContentPage> {
                             currentUserEnd: currentuserEnd,
                             currentTtsStart: currentttsStart,
                             currentTtsEnd: currentttsEnd,
+                            pitchFeedback: currentPitchComparison,
+                            amplitudeFeedback: currentAmplitudeComparison,
+                            previousPitchFeedback: currentResults,
                           ),
                   ),
                   Wrap(
                     spacing: 0.0,
                     children: wordButtons,
                   ),
+                  ElevatedButton(onPressed: null, child: Text('연습하기')),
                 ],
               ),
             );
