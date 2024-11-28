@@ -232,8 +232,8 @@ class ContentState extends State<ContentPage> {
         final double ttsStart = ttsInterval?['start'] ?? 0.0;
         final double ttsEnd = ttsInterval?['end'] ?? 0.0;
 
-        if (i < results.length) {
-          switch (results[i]) {
+        if (i > 0) {
+          switch (results[i - 1]) {
             case 0:
               wordButtons.add(SizedBox(width: 20));
               break;
@@ -268,7 +268,11 @@ class ContentState extends State<ContentPage> {
                       currentPitchComparison = 0;
                       currentAmplitudeComparison = 0;
 
-                      currentResults = results[i];
+                      if (i > 0) {
+                        currentResults = results[i - 1];
+                      } else {
+                        currentResults = 0;
+                      }
                     });
                     _updatePreviousGraphData(
                         previousUserStart,
@@ -367,11 +371,8 @@ class ContentState extends State<ContentPage> {
                     //메시지를 담음
                     currentPitchComparison = pitchComparisons[i];
                     currentAmplitudeComparison = amplitudeComparisons[i];
-                    if (i == 0) {
-                      currentResults = 0;
-                    } else {
-                      currentResults = results[i - 1];
-                    }
+
+                    currentResults = 0;
                   });
                 },
                 child: Text(word, style: const TextStyle(fontSize: 20)),
