@@ -20,6 +20,16 @@ class GraphPage extends StatefulWidget {
   final int pitchFeedback; //피치 피드백
   final int amplitudeFeedback; //진폭 피드백
   final int previousPitchFeedback; //이전 단어 피치 피드백
+  final double? previousUserStart; //이전 단어 사용자 타임스탬프 시작점
+  final double? previousUserEnd; //이전 단어 사용자 타임스탬프 끝점
+  final double? previousTtsStart; //이전 단어 표준어 타임스탬프 시작점
+  final double? previousTtsEnd; //이전 단어 표준어 타임스탬프 끝점
+  final List<FlSpot>? previousUserGraphData; //이전 단어 사용자 pitch 데이터로 만든 그래프 지점
+  final List<FlSpot>? previousTtsGraphData; //이전 단어 표준어 pitch 데이터로 만든 그래프 지점
+  final List<FlSpot>?
+      previousUserAmplitudeGraphData; //이전 단어 사용자 amplitude 데이터로 만든 그래프 지점
+  final List<FlSpot>?
+      previousTtsAmplitudeGraphData; //이전 단어 표준어 amplitude 데이터로 만든 그래프 지점
 
   const GraphPage({
     super.key,
@@ -36,6 +46,14 @@ class GraphPage extends StatefulWidget {
     required this.pitchFeedback,
     required this.amplitudeFeedback,
     required this.previousPitchFeedback,
+    this.previousUserStart,
+    this.previousUserEnd,
+    this.previousTtsStart,
+    this.previousTtsEnd,
+    this.previousUserGraphData,
+    this.previousTtsGraphData,
+    this.previousUserAmplitudeGraphData,
+    this.previousTtsAmplitudeGraphData,
   });
 
   @override
@@ -49,6 +67,8 @@ class GraphState extends State<GraphPage> {
   late LineChartBarData ttsPitchGraph;
   late LineChartBarData userAmplitudeGraph;
   late LineChartBarData ttsAmplitudeGraph;
+  late LineChartBarData? previousUserPitchGraph;
+  late LineChartBarData? previousTtsPitchGraph;
 
   final _audioPlayer = AudioPlayer();
 
@@ -93,6 +113,24 @@ class GraphState extends State<GraphPage> {
       barWidth: 1,
       dotData: FlDotData(show: false),
     );
+    previousTtsPitchGraph = widget.previousTtsGraphData != null
+        ? LineChartBarData(
+            spots: widget.previousTtsGraphData!,
+            isCurved: true,
+            color: Colors.red,
+            barWidth: 4,
+            dotData: FlDotData(show: false),
+          )
+        : null;
+    previousUserPitchGraph = widget.previousUserGraphData != null
+        ? LineChartBarData(
+            spots: widget.previousUserGraphData!,
+            isCurved: true,
+            color: Colors.blue,
+            barWidth: 4,
+            dotData: FlDotData(show: false),
+          )
+        : null;
     super.initState();
     //그래프 데이터 설정
   }
@@ -106,6 +144,7 @@ class GraphState extends State<GraphPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Padding(
@@ -129,8 +168,13 @@ class GraphState extends State<GraphPage> {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  _playSegment(widget.ttsAudioPath, widget.currentTtsStart,
-                      widget.currentTtsEnd);
+                  if (previousTtsPitchGraph != null) {
+                    _playSegment(widget.ttsAudioPath, widget.previousTtsStart!,
+                        widget.currentTtsEnd);
+                  } else {
+                    _playSegment(widget.ttsAudioPath, widget.currentTtsStart,
+                        widget.currentTtsEnd);
+                  }
                 },
                 child: Text("표준어 들어보기"),
               ),
@@ -138,8 +182,13 @@ class GraphState extends State<GraphPage> {
               // 내 목소리 들어보기 버튼
               ElevatedButton(
                 onPressed: () {
-                  _playSegment(widget.userAudioPath, widget.currentUserStart,
-                      widget.currentUserEnd);
+                  if (previousUserPitchGraph != null) {
+                    _playSegment(widget.userAudioPath,
+                        widget.previousUserStart!, widget.currentUserEnd);
+                  } else {
+                    _playSegment(widget.userAudioPath, widget.currentUserStart,
+                        widget.currentUserEnd);
+                  }
                 },
                 child: Text("내 목소리 들어보기"),
               ),
@@ -153,13 +202,13 @@ class GraphState extends State<GraphPage> {
                   Container(
                     padding: EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: Colors.white70,
                       borderRadius: BorderRadius.circular(10), // 테두리를 둥글게 설정
                     ),
                     //color: Colors.grey,
                     child: Text(
                       '표준어에 비해 높낮이 변화가 커요.\n더 부드럽게 발음해보세요.',
                       style: TextStyle(
+                        color: Colors.red,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -251,6 +300,7 @@ class GraphState extends State<GraphPage> {
           splashFactory: NoSplash.splashFactory, // 물방울 애니메이션 제거
         ),
         child: BottomNavigationBar(
+          backgroundColor: Colors.white,
           type: BottomNavigationBarType.fixed,
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -300,7 +350,9 @@ class GraphState extends State<GraphPage> {
           borderData: FlBorderData(show: true),
           lineBarsData: [
             userPitchGraph,
+            if (previousTtsPitchGraph != null) previousTtsPitchGraph!,
             ttsPitchGraph,
+            if (previousUserPitchGraph != null) previousUserPitchGraph!,
           ],
         ),
       ),

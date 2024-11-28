@@ -36,12 +36,15 @@ class ContentState extends State<ContentPage> {
   String ttsDownloadURL = '';
   String userDownloadURL = '';
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  bool twoGraphs = false;
 
   String jsonData = '';
 
   //그래프 그릴 때 넘겨줄 데이터
   List<FlSpot> userGraphData = [];
   List<FlSpot> ttsGraphData = [];
+  List<FlSpot> previousUserGraphData = [];
+  List<FlSpot> previousTtsGraphData = [];
   List<FlSpot> userAmplitudeGraphData = [];
   List<FlSpot> ttsAmplitudeGraphData = [];
 
@@ -64,6 +67,10 @@ class ContentState extends State<ContentPage> {
   double currentuserEnd = 0.0;
   double currentttsStart = 0.0;
   double currentttsEnd = 0.0;
+  double previousUserStart = 0.0;
+  double previousUserEnd = 0.0;
+  double previousTtsStart = 0.0;
+  double previousTtsEnd = 0.0;
   int currentPitchComparison = 0;
   int currentAmplitudeComparison = 0;
   int currentResults = 0;
@@ -225,6 +232,114 @@ class ContentState extends State<ContentPage> {
         final double ttsStart = ttsInterval?['start'] ?? 0.0;
         final double ttsEnd = ttsInterval?['end'] ?? 0.0;
 
+        if (i < results.length) {
+          switch (results[i]) {
+            case 0:
+              wordButtons.add(SizedBox(width: 20));
+              break;
+            case 1:
+              wordButtons.add(IconButton(
+                  onPressed: () {
+                    setState(() {
+                      //진폭 그래프 업데이트
+                      twoGraphs = true;
+                      previousUserStart = userIntervals[i - 1]['start'];
+                      previousTtsStart = ttsIntervals[i - 1]['start'];
+                      previousUserEnd = userIntervals[i - 1]['end'];
+                      previousTtsEnd = ttsIntervals[i - 1]['end'];
+                      userAmplitudeGraphData = generateUserAmplitudeData(
+                          userAmplitudeValues,
+                          userSamplingRate,
+                          previousUserStart,
+                          userEnd);
+                      ttsAmplitudeGraphData = generateTtsAmplitudeData(
+                          ttsAmplitudeValues,
+                          ttsSamplingRate,
+                          previousTtsStart,
+                          ttsEnd);
+
+                      //선택된 단어 시작점 끝점 업데이트
+                      currentuserStart = userStart;
+                      currentuserEnd = userEnd;
+                      currentttsStart = ttsStart;
+                      currentttsEnd = ttsEnd;
+
+                      //메시지를 담음
+                      currentPitchComparison = 0;
+                      currentAmplitudeComparison = 0;
+
+                      currentResults = results[i];
+                    });
+                    _updatePreviousGraphData(
+                        previousUserStart,
+                        previousUserEnd,
+                        previousTtsStart,
+                        previousTtsEnd,
+                        userStart,
+                        userEnd,
+                        ttsStart,
+                        ttsEnd);
+                  },
+                  icon: Icon(
+                    Icons.arrow_outward,
+                    color: Colors.orange,
+                    size: 20,
+                  )));
+              break;
+            case -1:
+              wordButtons.add(Transform.rotate(
+                  angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
+                  child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          //진폭 그래프 업데이트
+                          twoGraphs = true;
+                          previousUserStart = userIntervals[i - 1]['start'];
+                          previousTtsStart = ttsIntervals[i - 1]['start'];
+                          previousUserEnd = userIntervals[i - 1]['end'];
+                          previousTtsEnd = ttsIntervals[i - 1]['end'];
+                          userAmplitudeGraphData = generateUserAmplitudeData(
+                              userAmplitudeValues,
+                              userSamplingRate,
+                              previousUserStart,
+                              userEnd);
+                          ttsAmplitudeGraphData = generateTtsAmplitudeData(
+                              ttsAmplitudeValues,
+                              ttsSamplingRate,
+                              previousTtsStart,
+                              ttsEnd);
+
+                          //선택된 단어 시작점 끝점 업데이트
+                          currentuserStart = userStart;
+                          currentuserEnd = userEnd;
+                          currentttsStart = ttsStart;
+                          currentttsEnd = ttsEnd;
+
+                          //메시지를 담음
+                          currentPitchComparison = 0;
+                          currentAmplitudeComparison = 0;
+
+                          currentResults = results[i];
+                        });
+                        _updatePreviousGraphData(
+                            previousUserStart,
+                            previousUserEnd,
+                            previousTtsStart,
+                            previousTtsEnd,
+                            userStart,
+                            userEnd,
+                            ttsStart,
+                            ttsEnd);
+                      },
+                      icon: Icon(
+                        Icons.arrow_outward,
+                        color: Colors.orange,
+                        size: 20,
+                      ))));
+              break;
+          }
+        }
+
         wordButtons.add(
           Column(
             children: [
@@ -277,33 +392,6 @@ class ContentState extends State<ContentPage> {
             ],
           ),
         );
-
-        //단어 사이가 표준어 대비 얼마나 위로 혹은 아래로 차이가 나는지 묘사
-        //괜찮다면 표시하지 않지만 아래로 차이가 나면 아래로 화살표, 위로 차이가 나면 위로 화살표
-        if (i < results.length) {
-          switch (results[i]) {
-            case 0:
-              wordButtons.add(SizedBox(width: 20));
-              break;
-            case 1:
-              wordButtons.add(Icon(
-                Icons.arrow_outward,
-                color: Colors.orange,
-                size: 20,
-              ));
-              break;
-            case -1:
-              wordButtons.add(Transform.rotate(
-                angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
-                child: Icon(
-                  Icons.arrow_downward,
-                  color: Colors.orange,
-                  size: 20,
-                ),
-              ));
-              break;
-          }
-        }
       }
 
       return wordButtons;
@@ -353,6 +441,8 @@ class ContentState extends State<ContentPage> {
       double userStart, double userEnd, double ttsStart, double ttsEnd) {
     userGraphData = [];
     ttsGraphData = [];
+    previousTtsGraphData = [];
+    previousUserGraphData = [];
     //print(userStart);
     //print(ttsStart);
 
@@ -377,10 +467,57 @@ class ContentState extends State<ContentPage> {
     }
   }
 
+  void _updatePreviousGraphData(
+    double previousUserStart,
+    double previousUserEnd,
+    double previousTtsStart,
+    double previousTtsEnd,
+    double userStart,
+    double userEnd,
+    double ttsStart,
+    double ttsEnd,
+  ) {
+    previousUserGraphData = [];
+    previousTtsGraphData = [];
+    userGraphData = [];
+    ttsGraphData = [];
+    //print(userStart);
+    //print(ttsStart);
+
+    // 유저 피치 값
+    for (int i = 0; i < userTimeSteps.length; i++) {
+      if (userTimeSteps[i] >= previousUserStart &&
+          userTimeSteps[i] <= previousUserEnd &&
+          userPitchValues[i] != 0) {
+        //print(userTimeSteps[i]);
+        previousUserGraphData.add(FlSpot(userTimeSteps[i], userPitchValues[i]));
+      } else if (userTimeSteps[i] >= userStart &&
+          userTimeSteps[i] <= userEnd &&
+          userPitchValues[i] != 0) {
+        //print(userTimeSteps[i]);
+        userGraphData.add(FlSpot(userTimeSteps[i], userPitchValues[i]));
+      }
+    }
+
+    for (int i = 0; i < ttsTimeSteps.length; i++) {
+      if (ttsTimeSteps[i] >= previousTtsStart &&
+          ttsTimeSteps[i] <= previousTtsEnd &&
+          ttsPitchValues[i] != 0) {
+        previousTtsGraphData.add(FlSpot(ttsTimeSteps[i], ttsPitchValues[i]));
+      } else if (ttsTimeSteps[i] >= ttsStart &&
+          ttsTimeSteps[i] <= ttsEnd &&
+          ttsPitchValues[i] != 0) {
+        ttsGraphData.add(FlSpot(ttsTimeSteps[i], ttsPitchValues[i]));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(widget.title),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -407,21 +544,43 @@ class ContentState extends State<ContentPage> {
                     child: userGraphData.isEmpty
                         ? Center(child: Text('단어를 선택하세요'))
                         //그래프 보여주는 내부 페이지 호출
-                        : GraphPage(
-                            userGraphData: userGraphData,
-                            ttsGraphData: ttsGraphData,
-                            userAmplitudeGraphData: userAmplitudeGraphData,
-                            ttsAmplitudeGraphData: ttsAmplitudeGraphData,
-                            userAudioPath: recordedFilePath,
-                            ttsAudioPath: standardFilePath,
-                            currentUserStart: currentuserStart,
-                            currentUserEnd: currentuserEnd,
-                            currentTtsStart: currentttsStart,
-                            currentTtsEnd: currentttsEnd,
-                            pitchFeedback: currentPitchComparison,
-                            amplitudeFeedback: currentAmplitudeComparison,
-                            previousPitchFeedback: currentResults,
-                          ),
+                        : twoGraphs
+                            ? GraphPage(
+                                userGraphData: userGraphData,
+                                ttsGraphData: ttsGraphData,
+                                userAmplitudeGraphData: userAmplitudeGraphData,
+                                ttsAmplitudeGraphData: ttsAmplitudeGraphData,
+                                userAudioPath: recordedFilePath,
+                                ttsAudioPath: standardFilePath,
+                                currentUserStart: currentuserStart,
+                                currentUserEnd: currentuserEnd,
+                                currentTtsStart: currentttsStart,
+                                currentTtsEnd: currentttsEnd,
+                                pitchFeedback: currentPitchComparison,
+                                amplitudeFeedback: currentAmplitudeComparison,
+                                previousPitchFeedback: currentResults,
+                                previousUserGraphData: previousUserGraphData,
+                                previousTtsGraphData: previousTtsGraphData,
+                                previousTtsEnd: previousTtsEnd,
+                                previousTtsStart: previousTtsStart,
+                                previousUserEnd: previousUserEnd,
+                                previousUserStart: previousUserStart,
+                              )
+                            : GraphPage(
+                                userGraphData: userGraphData,
+                                ttsGraphData: ttsGraphData,
+                                userAmplitudeGraphData: userAmplitudeGraphData,
+                                ttsAmplitudeGraphData: ttsAmplitudeGraphData,
+                                userAudioPath: recordedFilePath,
+                                ttsAudioPath: standardFilePath,
+                                currentUserStart: currentuserStart,
+                                currentUserEnd: currentuserEnd,
+                                currentTtsStart: currentttsStart,
+                                currentTtsEnd: currentttsEnd,
+                                pitchFeedback: currentPitchComparison,
+                                amplitudeFeedback: currentAmplitudeComparison,
+                                previousPitchFeedback: currentResults,
+                              ),
                   ),
                   Wrap(
                     spacing: 0.0,

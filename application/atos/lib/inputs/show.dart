@@ -36,6 +36,8 @@ class ShowState extends State<ShowPage> {
   //그래프 그릴 때 넘겨줄 데이터
   List<FlSpot> userGraphData = [];
   List<FlSpot> ttsGraphData = [];
+  List<FlSpot> previousUserGraphData = [];
+  List<FlSpot> previousTtsGraphData = [];
   List<FlSpot> userAmplitudeGraphData = [];
   List<FlSpot> ttsAmplitudeGraphData = [];
 
@@ -60,9 +62,14 @@ class ShowState extends State<ShowPage> {
   double currentuserEnd = 0.0;
   double currentttsStart = 0.0;
   double currentttsEnd = 0.0;
+  double previousUserStart = 0.0;
+  double previousUserEnd = 0.0;
+  double previousTtsStart = 0.0;
+  double previousTtsEnd = 0.0;
   int currentPitchComparison = 0;
   int currentAmplitudeComparison = 0;
   int currentResults = 0;
+  bool twoGraphs = false;
 
   //화살표
   final List<Icon> arrows = [
@@ -259,6 +266,114 @@ class ShowState extends State<ShowPage> {
         final double ttsStart = ttsInterval?['start'] ?? 0.0;
         final double ttsEnd = ttsInterval?['end'] ?? 0.0;
 
+        if (i < results.length) {
+          switch (results[i]) {
+            case 0:
+              wordButtons.add(SizedBox(width: 20));
+              break;
+            case 1:
+              wordButtons.add(IconButton(
+                  onPressed: () {
+                    setState(() {
+                      //진폭 그래프 업데이트
+                      twoGraphs = true;
+                      previousUserStart = userIntervals[i - 1]['start'];
+                      previousTtsStart = ttsIntervals[i - 1]['start'];
+                      previousUserEnd = userIntervals[i - 1]['end'];
+                      previousTtsEnd = ttsIntervals[i - 1]['end'];
+                      userAmplitudeGraphData = generateUserAmplitudeData(
+                          userAmplitudeValues,
+                          userSamplingRate,
+                          previousUserStart,
+                          userEnd);
+                      ttsAmplitudeGraphData = generateTtsAmplitudeData(
+                          ttsAmplitudeValues,
+                          ttsSamplingRate,
+                          previousTtsStart,
+                          ttsEnd);
+
+                      //선택된 단어 시작점 끝점 업데이트
+                      currentuserStart = userStart;
+                      currentuserEnd = userEnd;
+                      currentttsStart = ttsStart;
+                      currentttsEnd = ttsEnd;
+
+                      //메시지를 담음
+                      currentPitchComparison = 0;
+                      currentAmplitudeComparison = 0;
+
+                      currentResults = results[i];
+                    });
+                    _updatePreviousGraphData(
+                        previousUserStart,
+                        previousUserEnd,
+                        previousTtsStart,
+                        previousTtsEnd,
+                        userStart,
+                        userEnd,
+                        ttsStart,
+                        ttsEnd);
+                  },
+                  icon: Icon(
+                    Icons.arrow_outward,
+                    color: Colors.orange,
+                    size: 20,
+                  )));
+              break;
+            case -1:
+              wordButtons.add(Transform.rotate(
+                  angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
+                  child: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          //진폭 그래프 업데이트
+                          twoGraphs = true;
+                          previousUserStart = userIntervals[i - 1]['start'];
+                          previousTtsStart = ttsIntervals[i - 1]['start'];
+                          previousUserEnd = userIntervals[i - 1]['end'];
+                          previousTtsEnd = ttsIntervals[i - 1]['end'];
+                          userAmplitudeGraphData = generateUserAmplitudeData(
+                              userAmplitudeValues,
+                              userSamplingRate,
+                              previousUserStart,
+                              userEnd);
+                          ttsAmplitudeGraphData = generateTtsAmplitudeData(
+                              ttsAmplitudeValues,
+                              ttsSamplingRate,
+                              previousTtsStart,
+                              ttsEnd);
+
+                          //선택된 단어 시작점 끝점 업데이트
+                          currentuserStart = userStart;
+                          currentuserEnd = userEnd;
+                          currentttsStart = ttsStart;
+                          currentttsEnd = ttsEnd;
+
+                          //메시지를 담음
+                          currentPitchComparison = 0;
+                          currentAmplitudeComparison = 0;
+
+                          currentResults = results[i];
+                        });
+                        _updatePreviousGraphData(
+                            previousUserStart,
+                            previousUserEnd,
+                            previousTtsStart,
+                            previousTtsEnd,
+                            userStart,
+                            userEnd,
+                            ttsStart,
+                            ttsEnd);
+                      },
+                      icon: Icon(
+                        Icons.arrow_outward,
+                        color: Colors.orange,
+                        size: 20,
+                      ))));
+              break;
+          }
+        }
+
         wordButtons.add(
           Column(
             children: [
@@ -266,6 +381,7 @@ class ShowState extends State<ShowPage> {
               TextButton(
                 onPressed: () {
                   //피치 그래프 업데이트
+                  twoGraphs = false;
                   _updateGraphData(userStart, userEnd, ttsStart, ttsEnd);
                   setState(() {
                     //진폭 그래프 업데이트
@@ -289,7 +405,7 @@ class ShowState extends State<ShowPage> {
                     if (i == 0) {
                       currentResults = 0;
                     } else {
-                      currentResults = results[i - 1];
+                      currentResults = results[i];
                     }
                   });
                 },
@@ -314,30 +430,6 @@ class ShowState extends State<ShowPage> {
 
         //단어 사이가 표준어 대비 얼마나 위로 혹은 아래로 차이가 나는지 묘사
         //괜찮다면 표시하지 않지만 아래로 차이가 나면 아래로 화살표, 위로 차이가 나면 위로 화살표
-        if (i < results.length) {
-          switch (results[i]) {
-            case 0:
-              wordButtons.add(SizedBox(width: 20));
-              break;
-            case 1:
-              wordButtons.add(Icon(
-                Icons.arrow_outward,
-                color: Colors.orange,
-                size: 20,
-              ));
-              break;
-            case -1:
-              wordButtons.add(Transform.rotate(
-                angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
-                child: Icon(
-                  Icons.arrow_downward,
-                  color: Colors.orange,
-                  size: 20,
-                ),
-              ));
-              break;
-          }
-        }
       }
 
       return wordButtons;
@@ -384,7 +476,11 @@ class ShowState extends State<ShowPage> {
 
   // 피치 데이터를 기준으로 그래프를 업데이트하는 함수
   void _updateGraphData(
-      double userStart, double userEnd, double ttsStart, double ttsEnd) {
+    double userStart,
+    double userEnd,
+    double ttsStart,
+    double ttsEnd,
+  ) {
     userGraphData = [];
     ttsGraphData = [];
     //print(userStart);
@@ -411,10 +507,57 @@ class ShowState extends State<ShowPage> {
     }
   }
 
+  void _updatePreviousGraphData(
+    double previousUserStart,
+    double previousUserEnd,
+    double previousTtsStart,
+    double previousTtsEnd,
+    double userStart,
+    double userEnd,
+    double ttsStart,
+    double ttsEnd,
+  ) {
+    previousUserGraphData = [];
+    previousTtsGraphData = [];
+    userGraphData = [];
+    ttsGraphData = [];
+    //print(userStart);
+    //print(ttsStart);
+
+    // 유저 피치 값
+    for (int i = 0; i < userTimeSteps.length; i++) {
+      if (userTimeSteps[i] >= previousUserStart &&
+          userTimeSteps[i] <= previousUserEnd &&
+          userPitchValues[i] != 0) {
+        //print(userTimeSteps[i]);
+        previousUserGraphData.add(FlSpot(userTimeSteps[i], userPitchValues[i]));
+      } else if (userTimeSteps[i] >= userStart &&
+          userTimeSteps[i] <= userEnd &&
+          userPitchValues[i] != 0) {
+        //print(userTimeSteps[i]);
+        userGraphData.add(FlSpot(userTimeSteps[i], userPitchValues[i]));
+      }
+    }
+
+    for (int i = 0; i < ttsTimeSteps.length; i++) {
+      if (ttsTimeSteps[i] >= previousTtsStart &&
+          ttsTimeSteps[i] <= previousTtsEnd &&
+          ttsPitchValues[i] != 0) {
+        previousTtsGraphData.add(FlSpot(ttsTimeSteps[i], ttsPitchValues[i]));
+      } else if (ttsTimeSteps[i] >= ttsStart &&
+          ttsTimeSteps[i] <= ttsEnd &&
+          ttsPitchValues[i] != 0) {
+        ttsGraphData.add(FlSpot(ttsTimeSteps[i], ttsPitchValues[i]));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text('분석 결과'),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -441,27 +584,60 @@ class ShowState extends State<ShowPage> {
                     child: userGraphData.isEmpty
                         ? Center(child: Text('단어를 선택하세요'))
                         //그래프 보여주는 내부 페이지 호출
-                        : GraphPage(
-                            userGraphData: userGraphData,
-                            ttsGraphData: ttsGraphData,
-                            userAmplitudeGraphData: userAmplitudeGraphData,
-                            ttsAmplitudeGraphData: ttsAmplitudeGraphData,
-                            userAudioPath: widget.userAudio,
-                            ttsAudioPath: widget.ttsAudio,
-                            currentUserStart: currentuserStart,
-                            currentUserEnd: currentuserEnd,
-                            currentTtsStart: currentttsStart,
-                            currentTtsEnd: currentttsEnd,
-                            pitchFeedback: currentPitchComparison,
-                            amplitudeFeedback: currentAmplitudeComparison,
-                            previousPitchFeedback: currentResults,
-                          ),
+                        : twoGraphs
+                            ? GraphPage(
+                                userGraphData: userGraphData,
+                                ttsGraphData: ttsGraphData,
+                                userAmplitudeGraphData: userAmplitudeGraphData,
+                                ttsAmplitudeGraphData: ttsAmplitudeGraphData,
+                                userAudioPath: widget.userAudio,
+                                ttsAudioPath: widget.ttsAudio,
+                                currentUserStart: currentuserStart,
+                                currentUserEnd: currentuserEnd,
+                                currentTtsStart: currentttsStart,
+                                currentTtsEnd: currentttsEnd,
+                                pitchFeedback: currentPitchComparison,
+                                amplitudeFeedback: currentAmplitudeComparison,
+                                previousPitchFeedback: currentResults,
+                                previousUserGraphData: previousUserGraphData,
+                                previousTtsGraphData: previousTtsGraphData,
+                                previousTtsEnd: previousTtsEnd,
+                                previousTtsStart: previousTtsStart,
+                                previousUserEnd: previousUserEnd,
+                                previousUserStart: previousUserStart,
+                              )
+                            : GraphPage(
+                                userGraphData: userGraphData,
+                                ttsGraphData: ttsGraphData,
+                                userAmplitudeGraphData: userAmplitudeGraphData,
+                                ttsAmplitudeGraphData: ttsAmplitudeGraphData,
+                                userAudioPath: widget.userAudio,
+                                ttsAudioPath: widget.ttsAudio,
+                                currentUserStart: currentuserStart,
+                                currentUserEnd: currentuserEnd,
+                                currentTtsStart: currentttsStart,
+                                currentTtsEnd: currentttsEnd,
+                                pitchFeedback: currentPitchComparison,
+                                amplitudeFeedback: currentAmplitudeComparison,
+                                previousPitchFeedback: currentResults,
+                              ),
                   ),
                   Wrap(
                     spacing: 0.0,
                     children: wordButtons,
                   ),
                   ElevatedButton(onPressed: null, child: Text('연습하기')),
+                  ElevatedButton(
+                    onPressed: showTitleInputDialog,
+                    child: const Text('연습 저장하기'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.popUntil(
+                          context, ModalRoute.withName('/manage'));
+                    },
+                    child: const Text('돌아가기'),
+                  ),
                 ],
               ),
             );
