@@ -73,6 +73,7 @@ userData_db = db.collection('userData')
 userConnection_db = db.collection('userConnection')
 tempText_db = db.collection('tempText')
 userPractice_db = db.collection('userPractice')
+todaySentence_db = db.collection('todaySentence')
 
 # class LogMiddleware(BaseHTTPMiddleware):
 #     async def dispatch(self, request: Request, call_next):
@@ -468,6 +469,7 @@ async def save_user_practice(request: SavePracticeDTO):
     # Temp 디비에 있는 데이터 삭제는 안함
     try:
         user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
+        user_practice_ref = list(user_practice_ref)
         if len([doc for doc in user_practice_ref]) > 0:
             audio_db_collection = 'temp/' + str(request.temp_id) + '/'
             blob = bucket.blob(audio_db_collection + 'userVoice.wav')
@@ -741,18 +743,27 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post("/get-today-sentence", description="오늘의 문장 가져오기", tags=['Util api'])
-async def get_today_sentence(user_id: str):
+async def get_today_sentence():
     try:
-        user_doc = userData_db.document(user_id).get()
-        if not user_doc.exists:
-            raise HTTPException(status_code=404, detail="User not found")
+        date = datetime.now().date()
+        date_int = int(str(date).replace("-", ""))
+        idx = date_int % 3
 
-        user_data = user_doc.to_dict()
-        region = user_data.get('region')
+        sentence_ref = todaySentence_db.where('idx', '==', idx).stream()
+        
+        # 쿼리 결과를 리스트로 변환
+        sentence_list = list(sentence_ref)
 
-        sentence = tt.get_today_sentence(region)
+        if not sentence_list:
+            raise HTTPException(status_code=404, detail="오늘의 문장을 찾을 수 없습니다.")
 
-        return sentence
+        dto = {
+            'data': {
+                'sentence': sentence_list[0].to_dict().get('text')
+            }
+        }
+
+        return dto
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
