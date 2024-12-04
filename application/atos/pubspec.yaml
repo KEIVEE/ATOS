@@ -34,8 +34,29 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.8    
+  audioplayers:
+  http:
+  firebase_core: ^3.6.0
+  firebase_auth: 
+  cloud_firestore: ^5.4.4
+  path_provider: ^2.0.5
+  permission_handler: ^11.0.1
+  flutter_sound: ^9.2.13
+  path:
+  firebase_storage:
+  dio:
+  archive:
+  fl_chart:
+  flutter_native_splash:
 
+flutter_native_splash:
+  color: "#2a346e" # background color
+  image: assets/images/atosSplash.png # 추가할 이미지 파일 경로를 추가  
+
+  
+  #flutter_fft: 
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -45,7 +66,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -59,9 +80,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/atosSplash.png
+    - assets/images/seoulMallo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
