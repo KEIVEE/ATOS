@@ -33,6 +33,8 @@ import zipfile
 
 import os
 import shutil
+from concurrent.futures import ThreadPoolExecutor
+
 
 import whisperx
 
@@ -626,7 +628,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         tts_word_intervals = extract_word_timestamps(tts_voice_path)
 
         # TTS, 사용자 타임스탬프 보정
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor() as executor:
             future_word_intervals = executor.submit(ts_cal, word_intervals, text)
             future_tts_word_intervals = executor.submit(ts_cal, tts_word_intervals, text)
 
@@ -636,20 +638,31 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         
         threshold_value = 5600 # 적절한 값 정하기
 
-        # TTS, 사용자 진폭 비교 
-        comp_amp_result, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
+        # 멀티스레딩을 사용하여 세 가지 작업을 병렬로 수행
+        with ThreadPoolExecutor() as executor:
+            future_amp_result = executor.submit(compare_amplitude_differences, word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
+            future_pitch_result = executor.submit(calculate_pitch_differences, word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
+            future_segments_result = executor.submit(compare_pitch_differences, word_intervals, pitch_values, tts_word_intervals, pitch_values_tts, time_steps, time_steps_tts, 20)
 
-        # TTS, 사용자 피치 비교
-        comp_pitch_result = calculate_pitch_differences(
-        word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
+            # 결과를 기다림
+            comp_amp_result, max_word = future_amp_result.result()
+            comp_pitch_result = future_pitch_result.result()
+            results = future_segments_result.result()
 
-        # 세그먼트 비교(일단 안씀)
-        # highest_segment, lowest_segment = compare_segments(
-        #     word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
-        # )
+        # # TTS, 사용자 진폭 비교 
+        # comp_amp_result, max_word = compare_amplitude_differences(word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
 
-        # TTS, 사용자 이웃한 단어와의 피치 변화 비교
-        results = compare_pitch_differences(word_intervals, pitch_values, tts_word_intervals, pitch_values_tts,time_steps,time_steps_tts, threshold=20)
+        # # TTS, 사용자 피치 비교
+        # comp_pitch_result = calculate_pitch_differences(
+        # word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
+
+        # # 세그먼트 비교(일단 안씀)
+        # # highest_segment, lowest_segment = compare_segments(
+        # #     word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts
+        # # )
+
+        # # TTS, 사용자 이웃한 단어와의 피치 변화 비교
+        # results = compare_pitch_differences(word_intervals, pitch_values, tts_word_intervals, pitch_values_tts,time_steps,time_steps_tts, threshold=20)
      
         # 로컬 파일 삭제
         os.remove(user_voice_path)
