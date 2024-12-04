@@ -17,7 +17,7 @@ from starlette.requests import Request
 from server.DTO.set_user_dto import UserDTO, SetRegionDTO
 from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
 from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
-from server.DTO.user_practice_dto import SavePracticeDTO
+from server.DTO.user_practice_dto import SavePracticeDTO, UpdatePracticeDTO
 from server.DTO.analysis_dto import AnalysisResult, VoiceAnalysisResponse, VoiceAnalysisResponse2
 from server.DTO.login_dto import LoginHistoryResDTO
 
@@ -128,6 +128,9 @@ async def get_login_history(user_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get('')
+
     
 
 @app.post('/set-user-region',description='사용자 지역 정보 변경', tags=['User api'])
@@ -457,6 +460,47 @@ async def save_user_practice(request: SavePracticeDTO):
         }
 
         userPractice_db.document().set(user_practice_save_dto)
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
+@app.post("/update-user-practice", description="사용자의 연습 데이터 수정", tags=['Practice api'])
+async def update_user_practice(request: UpdatePracticeDTO):
+    try:
+        user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
+        audio_db_collection = 'temp/' + str(request.temp_id) + '/'
+        blob = bucket.blob(audio_db_collection + 'userVoice.wav')
+        blob3 = bucket.blob(audio_db_collection + 'analysis.json')
+        user_voice = blob.download_as_string()
+        analysis_result = blob3.download_as_string()
+
+        saved_date = user_practice_ref[0].to_dict().get('date')
+        practice_date = user_practice_ref[0].to_dict().get('practice_date')
+
+        date = datetime.now()
+        practice_date.append(str(date.strftime("%Y%m%d%H%M%S")))
+
+        practice_save_db = 'userPractice/'+str(request.user_id)+ saved_date +'/'
+        blob = bucket.blob(practice_save_db + 'userVoice.wav')
+        blob.upload_from_string(user_voice, content_type="audio/wav")
+        blob = bucket.blob(practice_save_db + 'analysis.json')
+        blob.upload_from_string(analysis_result, content_type="application/json")
+
+        save_title = request.title
+
+        if request.changed_title:
+            save_title = request.changed_title
+
+
+        user_practice_save_dto = {
+            'title': save_title,
+            'practice_date': practice_date,
+        }
+
+        for doc in user_practice_ref:
+            userPractice_db.document(doc.id).update(user_practice_save_dto)
 
         return True
 
