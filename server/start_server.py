@@ -467,6 +467,36 @@ async def save_user_practice(request: SavePracticeDTO):
     # Temp 디비에 있는 데이터들을 userPractice 디비로 이동 (정식적으로 저장)
     # Temp 디비에 있는 데이터 삭제는 안함
     try:
+        user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
+        if len([doc for doc in user_practice_ref]) > 0:
+            audio_db_collection = 'temp/' + str(request.temp_id) + '/'
+            blob = bucket.blob(audio_db_collection + 'userVoice.wav')
+            blob3 = bucket.blob(audio_db_collection + 'analysis.json')
+            user_voice = blob.download_as_string()
+            analysis_result = blob3.download_as_string()
+
+            saved_date = user_practice_ref[0].to_dict().get('date')
+            practice_date = user_practice_ref[0].to_dict().get('practice_date')
+
+            date = datetime.now()
+            practice_date.append(str(date.strftime("%Y-%m-%d")))
+
+            practice_save_db = 'userPractice/'+str(request.user_id)+ saved_date +'/'
+            blob = bucket.blob(practice_save_db + 'userVoice.wav')
+            blob.upload_from_string(user_voice, content_type="audio/wav")
+            blob = bucket.blob(practice_save_db + 'analysis.json')
+            blob.upload_from_string(analysis_result, content_type="application/json")
+
+            user_practice_save_dto = {
+                'practice_date': practice_date,
+            }
+
+            for doc in user_practice_ref:
+                userPractice_db.document(doc.id).update(user_practice_save_dto)
+
+            return True
+
+
         text = tempText_db.document(str(request.temp_id)).get().to_dict().get('text')
         first_audio = tempText_db.document(str(request.temp_id)).get().to_dict().get('first_audio')
         audio_db_collection = 'temp/' + str(request.temp_id) + '/'
@@ -710,4 +740,19 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
+@app.post("/get-today-sentence", description="오늘의 문장 가져오기", tags=['Util api'])
+async def get_today_sentence(user_id: str):
+    try:
+        user_doc = userData_db.document(user_id).get()
+        if not user_doc.exists:
+            raise HTTPException(status_code=404, detail="User not found")
 
+        user_data = user_doc.to_dict()
+        region = user_data.get('region')
+
+        sentence = tt.get_today_sentence(region)
+
+        return sentence
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")

@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 class SavePracticeDTO(BaseModel):
-    user_id: Optional[str]
-    temp_id: Optional[str]
+    user_id: str
+    temp_id: str
     title: str
 
 
