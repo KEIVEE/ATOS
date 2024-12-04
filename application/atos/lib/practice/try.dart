@@ -2,6 +2,7 @@
 //미완성. 하지만 translated.dart와 하는 역할이 비슷함
 
 import 'package:atos/inputs/inputanalyzing.dart';
+import 'package:atos/control/ui.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart' as sound;
@@ -31,6 +32,8 @@ class TryState extends State<TryPage> {
   String standardFilePath = ""; // TTS 파일 경로 저장
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool done = false;
 
   String downloadURL = '';
 
@@ -102,6 +105,7 @@ class TryState extends State<TryPage> {
       // 위젯이 여전히 화면에 있으면
       setState(() {
         isRecording = false; // 녹음 상태 변경
+        done = true;
       });
     }
   }
@@ -109,16 +113,20 @@ class TryState extends State<TryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).primaryColor,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context); // 뒤로가기 버튼
           },
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).primaryColor,
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
@@ -126,49 +134,63 @@ class TryState extends State<TryPage> {
             const SizedBox(height: 10),
             Text(
               widget.sentence,
-              style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 20),
             // 분석 시작 버튼
-            OutlinedButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    //translating.dart처럼 실제로 post요청은 inputanalyzing.dart에서 함
-                    settings: const RouteSettings(name: "/inputanalyzing"),
-                    builder: (context) => InputAnalyzingPage(
-                        id: widget.id, //요청을 하기 위한 인자들은
-                        inputText: widget.sentence, //텍스트
-                        userVoicePath: recordedFilePath, //녹음 파일 경로
-                        ttsVoicePath: standardFilePath,
-                        title: widget.title))); // TTS 파일 경로
-              },
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: const Text('분석 시작'),
-            ),
-            const SizedBox(height: 20),
-            // 녹음 버튼
-            IconButton(
-              onPressed: isRecording ? stopRecording : startRecording,
-              icon: Icon(
-                isRecording ? Icons.stop : Icons.mic,
-                color: isRecording ? Colors.red : Colors.blue,
-              ),
-              iconSize: 80,
-            ),
 
-            OutlinedButton(
-              onPressed: _playAudio,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+            ManageSizedBox(
+                content: Column(
+                  children: [
+                    SizedBox(height: 50),
+
+                    // 녹음 버튼
+                    IconButton(
+                      onPressed: isRecording ? stopRecording : startRecording,
+                      icon: Icon(
+                        isRecording ? Icons.stop : Icons.mic,
+                        color: isRecording ? Colors.red : Colors.blue,
+                      ),
+                      iconSize: 80,
+                    ),
+                    const SizedBox(height: 20),
+
+                    CustomedButton(
+                      text: '표준어 듣기',
+                      buttonColor: Theme.of(context).primaryColor,
+                      textColor: Colors.white,
+                      onTap: () async {
+                        await _playAudio();
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    CustomedButton(
+                      text: '분석 시작',
+                      buttonColor:
+                          done ? Theme.of(context).primaryColor : Colors.grey,
+                      textColor: Colors.white,
+                      onTap: done
+                          ? () async {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  //translating.dart처럼 실제로 post요청은 inputanalyzing.dart에서 함
+                                  settings: const RouteSettings(
+                                      name: "/inputanalyzing"),
+                                  builder: (context) => InputAnalyzingPage(
+                                      id: widget.id, //요청을 하기 위한 인자들은
+                                      inputText: widget.sentence, //텍스트
+                                      userVoicePath:
+                                          recordedFilePath, //녹음 파일 경로
+                                      ttsVoicePath:
+                                          standardFilePath))); // TTS 파일 경로
+                            }
+                          : null,
+                    ),
+                  ],
                 ),
-              ),
-              child: const Text('표준어 듣기'),
-            ),
+                boxHeight: 700)
           ],
         ),
       ),

@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'ATOS', //수정
+        title: '서울말로',
         theme: ThemeData(
           colorScheme: ColorScheme.light(
             primary: Color.fromRGBO(42, 52, 110, 1), // 주요 색상
@@ -55,7 +55,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const SizedBox(height: 400),
+            //const SizedBox(height: 400),
+            Image.asset('assets/images/seoulMallo.png'),
+            const SizedBox(height: 50),
             CustomedButton(
                 text: '로그인',
                 buttonColor: Colors.white,

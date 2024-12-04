@@ -74,10 +74,11 @@ class ShortInputText extends InputDecoration {
 
 class ObscuringTextEditingController extends TextEditingController {
   @override
-  TextSpan buildTextSpan(
-      {required BuildContext context,
-      TextStyle? style,
-      required bool withComposing}) {
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
     var displayValue = '•' * value.text.length;
     if (!value.composing.isValid || !withComposing) {
       return TextSpan(style: style, text: displayValue);
@@ -89,12 +90,13 @@ class ObscuringTextEditingController extends TextEditingController {
     return TextSpan(
       style: style,
       children: <TextSpan>[
-        TextSpan(text: value.composing.textBefore(displayValue)),
+        TextSpan(text: displayValue.substring(0, value.composing.start)),
         TextSpan(
           style: composingStyle,
-          text: value.composing.textInside(displayValue),
+          text: displayValue.substring(
+              value.composing.start, value.composing.end),
         ),
-        TextSpan(text: value.composing.textAfter(displayValue)),
+        TextSpan(text: displayValue.substring(value.composing.end)),
       ],
     );
   }

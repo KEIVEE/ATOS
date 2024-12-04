@@ -167,9 +167,12 @@ class ShowState extends State<ShowPage> {
             .child('userVoice.wav')
             .getDownloadURL();
         final directory = await getApplicationDocumentsDirectory();
-        final resultFilePath = '${directory.path}/$title/analysis.json';
-        final standardFilePath = '${directory.path}/$title/ttsVoice.wav';
-        final recordedFilePath = '${directory.path}/$title/userVoice.wav';
+        final resultFilePath =
+            '${directory.path}/${overwrite ? widget.title : title}/analysis.json';
+        final standardFilePath =
+            '${directory.path}/${overwrite ? widget.title : title}/ttsVoice.wav';
+        final recordedFilePath =
+            '${directory.path}/${overwrite ? widget.title : title}/userVoice.wav';
 
         await Dio().download(resultUrl, resultFilePath);
         await Dio().download(ttsUrl, standardFilePath);
@@ -197,9 +200,11 @@ class ShowState extends State<ShowPage> {
         "title": overwrite ? widget.title : title,
       }));
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && mounted) {
         debugPrint('데이터가 성공적으로 업로드되었습니다.');
-        SnackBar(content: Text('저장이 완료되었습니다.'));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장이 완료되었습니다.')),
+        );
       } else {
         debugPrint('HTTP 요청 실패: ${response.statusCode}');
         debugPrint('HTTP 요청 실패: ${response.body}');
@@ -337,7 +342,11 @@ class ShowState extends State<ShowPage> {
                       currentPitchComparison = 0;
                       currentAmplitudeComparison = 0;
 
-                      currentResults = results[i];
+                      if (i > 0) {
+                        currentResults = results[i - 1];
+                      } else {
+                        currentResults = 0;
+                      }
                     });
                     _updatePreviousGraphData(
                         previousUserStart,
@@ -661,13 +670,14 @@ class ShowState extends State<ShowPage> {
                     spacing: 0.0,
                     children: wordButtons,
                   ),
-                  //ElevatedButton(onPressed: null, child: Text('연습하기')),
+                  SizedBox(height: 30),
                   CustomedButton(
                     onTap: showTitleInputDialog,
-                    text: '연습하기',
+                    text: '저장하기',
                     buttonColor: Theme.of(context).primaryColor,
                     textColor: Colors.white,
                   ),
+                  SizedBox(height: 10),
                   CustomedButton(
                     onTap: () {
                       Navigator.popUntil(
@@ -677,8 +687,7 @@ class ShowState extends State<ShowPage> {
                     buttonColor: Theme.of(context).primaryColor,
                     textColor: Colors.white,
                   ),
-                  Text(widget.title ?? ''),
-
+                  SizedBox(height: 10),
                   if (widget.title != null)
                     CustomedButton(
                       onTap: () {

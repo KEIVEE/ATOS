@@ -23,6 +23,11 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
   String _lowPitchPath = ''; // 저음 파일 경로
   String _highPitchPath = ''; // 고음 파일 경로
 
+  bool lowDone = false;
+  bool highDone = false;
+
+  bool allDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,7 +49,12 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
 
   //녹음 시작
   Future<void> _startRecording(String pitch) async {
-    final path = '${Directory.systemTemp.path}/pitch.wav';
+    var path = '';
+    if (pitch == 'low') {
+      path = '${Directory.systemTemp.path}/low.wav';
+    } else {
+      path = '${Directory.systemTemp.path}/high.wav';
+    }
     await _recorder.startRecorder(toFile: path);
     setState(() {
       if (pitch == 'low') {
@@ -63,8 +73,12 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
     setState(() {
       if (pitch == 'low') {
         _isRecordingLow = false;
+        lowDone = true;
+        allDone = lowDone && highDone;
       } else {
         _isRecordingHigh = false;
+        highDone = true;
+        allDone = lowDone && highDone;
       }
     });
   }
@@ -93,8 +107,9 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('음성 데이터 업로드 중 오류가 발생했습니다.')),
+            SnackBar(content: Text('음성 데이터 업로드 중 오류가 발생했습니다.')),
           );
+          debugPrint('오류 발생: ${response.toString()}');
         }
       }
 
@@ -119,26 +134,28 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
       appBar: AppBar(
         title: const Text('음성 데이터 등록하기'),
         automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             // 저음 입력 버튼
+            SizedBox(height: 50),
             CustomedButton(
               text: _isRecordingLow ? '녹음 끝내기' : '저음 입력하기',
-              buttonColor: Colors.blue,
+              buttonColor: Theme.of(context).primaryColor,
               textColor: Colors.white,
               onTap: _isRecordingLow
                   ? () => _stopRecording('low')
                   : () => _startRecording('low'),
             ),
-            const Text('현재 저음 고음값 가져올 수 있나?'),
+            //const Text('현재 저음 고음값 가져올 수 있나?'),
             const SizedBox(height: 20),
             // 고음 입력 버튼
             CustomedButton(
               text: _isRecordingHigh ? '녹음 끝내기' : '고음 입력하기',
-              buttonColor: Colors.blue,
+              buttonColor: Theme.of(context).primaryColor,
               textColor: Colors.white,
               onTap: _isRecordingHigh
                   ? () => _stopRecording('high')
@@ -149,11 +166,10 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
             // 확인 버튼 (녹음된 파일을 서버로 전송)
             CustomedButton(
               text: '확인',
-              buttonColor: Colors.blue,
+              buttonColor:
+                  allDone ? Theme.of(context).primaryColor : Colors.grey,
               textColor: Colors.white,
-              onTap: _lowPitchPath.isNotEmpty && _highPitchPath.isNotEmpty
-                  ? _sendVoiceData
-                  : null,
+              onTap: allDone ? _sendVoiceData : null,
             ),
           ],
         ),

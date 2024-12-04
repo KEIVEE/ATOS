@@ -26,7 +26,16 @@ class RegisterState extends State<RegisterPage> {
   String registerCheckMessage = ""; // 등록할 때 까먹은 부분이 무엇인지.
   var idChecked = false; // ID 중복 확인 여부
   var registerTried = false; // 회원가입 시도 여부
-  final regions = ['경상도', '전라도', '충청도', '강원도', '제주도']; // 지역 목록
+  final regions = [
+    '경상남도',
+    '경상북도',
+    '전라남도',
+    '전라북도',
+    '충청남도',
+    '충청북도',
+    '강원도',
+    '제주도',
+  ]; // 지역 목록
   String selectedGender = "남성"; // 성별을 저장할 변수 (기본값: 남성)
 
   Map<String, String> headers = {
@@ -36,6 +45,11 @@ class RegisterState extends State<RegisterPage> {
   var region = ""; // 지역
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  ObscuringTextEditingController passwordController =
+      ObscuringTextEditingController();
+  ObscuringTextEditingController passwordCheckController =
+      ObscuringTextEditingController();
 
   // ID 중복 체크 버튼
   Future<void> checkIdAvailability() async {
@@ -164,6 +178,7 @@ class RegisterState extends State<RegisterPage> {
                 id = text;
               },
             ),
+            SizedBox(height: 5),
             CustomedButton(
               text: '중복확인',
               buttonColor: Theme.of(context).primaryColor,
@@ -175,21 +190,21 @@ class RegisterState extends State<RegisterPage> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: idCheckMessage == '사용할 수 있는 id입니다.'
-                    ? Theme.of(context).primaryColor
+                    ? Colors.green
                     : Colors.red,
               ),
             ),
             const SizedBox(height: 50),
             // Password fields
             TextField(
-              controller: ObscuringTextEditingController(),
+              controller: passwordController,
               decoration: ShortInputText(hint: '비밀번호를 입력해 주세요.'),
               onChanged: (text) {
                 password = text;
               },
             ),
             TextField(
-              controller: ObscuringTextEditingController(),
+              controller: passwordCheckController,
               decoration: ShortInputText(hint: '비밀번호를 다시 입력해 주세요.'),
               onChanged: (text) {
                 setState(() {
@@ -239,7 +254,7 @@ class RegisterState extends State<RegisterPage> {
                     }),
               ],
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 40),
             // Register button
             CustomedButton(
               text: '회원가입',

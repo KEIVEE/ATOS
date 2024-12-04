@@ -236,7 +236,7 @@ class GraphState extends State<GraphPage> {
                     ),
                     //color: Colors.grey,
                     child: Text(
-                      '표준어에 비해 음량 변화가 커요.\n더 부드럽게 발음해보세요.',
+                      '표준어에 비해 세기 변화가 커요.\n더 부드럽게 발음해보세요.',
                       style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
@@ -251,7 +251,7 @@ class GraphState extends State<GraphPage> {
                     ),
                     //color: Colors.grey,
                     child: Text(
-                      '표준어에 비해 음량 변화가 작아요.\n더 다양한 음량으로 발음해보세요.',
+                      '표준어에 비해 세기 변화가 작아요.\n더 다양한 세기로 발음해보세요.',
                       style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
@@ -266,7 +266,7 @@ class GraphState extends State<GraphPage> {
                     ),
                     //color: Colors.grey,
                     child: Text(
-                      '이전 단어보다 너무 높아졌어요.\n좀 더 낮춰서 발음해보세요.',
+                      '이전 단어보다 표준어 대비 너무 높아졌어요.\n좀 더 낮춰서 발음해보세요.',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.bold,
@@ -281,7 +281,7 @@ class GraphState extends State<GraphPage> {
                     ),
                     //color: Colors.grey,
                     child: Text(
-                      '이전 단어보다 너무 낮아졌어요.\n좀 더 높여서 발음해보세요.',
+                      '이전 단어보다 표준어 대비 너무 낮아졌어요.\n좀 더 높여서 발음해보세요.',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.bold,
