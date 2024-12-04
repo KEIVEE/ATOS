@@ -1,11 +1,15 @@
 //분석 결과를 보여주는 페이지
 
 import 'dart:convert';
+import 'package:atos/control/ui.dart';
 import 'package:atos/inputs/graph.dart';
+import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:atos/control/uri.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ShowPage extends StatefulWidget {
   const ShowPage(
@@ -14,24 +18,23 @@ class ShowPage extends StatefulWidget {
       required this.id,
       required this.text,
       required this.userAudio,
-      required this.result});
+      required this.result,
+      this.title});
 
   final String id;
   final String ttsAudio;
   final String userAudio;
   final String text;
   final String result;
+  final String? title;
 
   @override
   State<ShowPage> createState() => ShowState();
 }
 
 class ShowState extends State<ShowPage> {
-  String resultDownloadURL = '';
-  String ttsDownloadURL = '';
-  String userDownloadURL = '';
-
   String jsonData = '';
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   //그래프 그릴 때 넘겨줄 데이터
   List<FlSpot> userGraphData = [];
@@ -115,7 +118,7 @@ class ShowState extends State<ShowPage> {
                 setState(() {
                   title = titleController.text; // 입력한 제목 저장
                 });
-                saveResult(); // 연습목록에 추가
+                saveResult(false); // 연습목록에 추가
                 Navigator.pop(context); // 팝업 닫기
               },
               child: const Text('저장'),
@@ -137,11 +140,42 @@ class ShowState extends State<ShowPage> {
   }
 
   //연습을 저장할 때
-  Future<void> saveResult() async {
+  Future<void> saveResult(bool overwrite) async {
     try {
-      if (title.isEmpty) {
+      if (title.isEmpty && !overwrite) {
         debugPrint('제목이 비어 있습니다. 저장하지 않습니다.');
         return;
+      }
+
+      try {
+        String resultUrl = await _storage
+            .ref()
+            .child('temp')
+            .child(widget.result)
+            .child('analysis.json')
+            .getDownloadURL();
+        String ttsUrl = await _storage
+            .ref()
+            .child('temp')
+            .child(widget.result)
+            .child('ttsVoice.wav')
+            .getDownloadURL();
+        String userUrl = await _storage
+            .ref()
+            .child('temp')
+            .child(widget.result)
+            .child('userVoice.wav')
+            .getDownloadURL();
+        final directory = await getApplicationDocumentsDirectory();
+        final resultFilePath = '${directory.path}/$title/analysis.json';
+        final standardFilePath = '${directory.path}/$title/ttsVoice.wav';
+        final recordedFilePath = '${directory.path}/$title/userVoice.wav';
+
+        await Dio().download(resultUrl, resultFilePath);
+        await Dio().download(ttsUrl, standardFilePath);
+        await Dio().download(userUrl, recordedFilePath);
+      } catch (e) {
+        debugPrint("파일 다운로드 오류: $e");
       }
 
       //제목이 있으면 저장api 호출
@@ -152,7 +186,7 @@ class ShowState extends State<ShowPage> {
           {
             "user_id": widget.id,
             "temp_id": widget.result,
-            "title": title,
+            "title": overwrite ? widget.title : title,
           },
         ),
       );
@@ -160,11 +194,12 @@ class ShowState extends State<ShowPage> {
       debugPrint(jsonEncode({
         "user_id": widget.id,
         "temp_id": widget.result,
-        "title": title,
+        "title": overwrite ? widget.title : title,
       }));
 
       if (response.statusCode == 200) {
         debugPrint('데이터가 성공적으로 업로드되었습니다.');
+        SnackBar(content: Text('저장이 완료되었습니다.'));
       } else {
         debugPrint('HTTP 요청 실패: ${response.statusCode}');
         debugPrint('HTTP 요청 실패: ${response.body}');
@@ -626,18 +661,33 @@ class ShowState extends State<ShowPage> {
                     spacing: 0.0,
                     children: wordButtons,
                   ),
-                  ElevatedButton(onPressed: null, child: Text('연습하기')),
-                  ElevatedButton(
-                    onPressed: showTitleInputDialog,
-                    child: const Text('연습 저장하기'),
+                  //ElevatedButton(onPressed: null, child: Text('연습하기')),
+                  CustomedButton(
+                    onTap: showTitleInputDialog,
+                    text: '연습하기',
+                    buttonColor: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
                   ),
-                  ElevatedButton(
-                    onPressed: () {
+                  CustomedButton(
+                    onTap: () {
                       Navigator.popUntil(
                           context, ModalRoute.withName('/manage'));
                     },
-                    child: const Text('돌아가기'),
+                    text: '돌아가기',
+                    buttonColor: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
                   ),
+                  Text(widget.title ?? ''),
+
+                  if (widget.title != null)
+                    CustomedButton(
+                      onTap: () {
+                        saveResult(true);
+                      },
+                      text: '분석 결과 덮어쓰기',
+                      buttonColor: Theme.of(context).primaryColor,
+                      textColor: Colors.white,
+                    ),
                 ],
               ),
             );

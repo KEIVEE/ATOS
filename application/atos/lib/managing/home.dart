@@ -2,6 +2,7 @@
 //login.dart에서 로그인 기록을 저장하는 이유가 잔디심기임
 
 import 'package:atos/control/ui.dart';
+import 'package:atos/inputs/translating.dart';
 import 'package:flutter/material.dart';
 import 'package:atos/account/setting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,6 +19,7 @@ class HomeState extends State<HomePage> {
   FirebaseAuth auth = FirebaseAuth.instance;
   var connected = false;
   var connectTried = false;
+  var reccomendation = '오늘 점심 학식 먹자.';
 
   @override
   Widget build(BuildContext context) {
@@ -51,15 +53,26 @@ class HomeState extends State<HomePage> {
                 ),
               ), // Add spacing to avoid overlap
               const Text('오늘의 추천 문장:', style: TextStyle(color: Colors.white)),
-              const Text('오늘의 추천 문장이 없습니다.',
+              Text(reccomendation,
                   style: TextStyle(color: Colors.white, fontSize: 20)),
               const SizedBox(height: 10),
               CustomedButton(
                 text: '시도하기',
                 buttonColor: Colors.white,
                 textColor: Theme.of(context).primaryColor,
-                onTap: () {
-                  // 시도하기: 그냥 쉬움
+                onTap: () async {
+                  if (mounted) {
+                    {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        settings: const RouteSettings(name: "/processing"),
+                        builder: (context) => TranslatingPage(
+                            id: widget.id,
+                            inputText: reccomendation,
+                            todo: "처리중이에요..",
+                            theme: "차분한"),
+                      ));
+                    }
+                  }
                 },
               ),
               const SizedBox(height: 20),

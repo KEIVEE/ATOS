@@ -34,7 +34,7 @@ class AddState extends State<AddPage> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TextField(
-                            maxLines: 5,
+                            maxLines: 8,
                             decoration: InputDecoration(
                               hintText: '텍스트를 입력해주세요.',
                               hintStyle: const TextStyle(color: Colors.grey),

@@ -13,12 +13,14 @@ class InputAnalyzingPage extends StatefulWidget {
     required this.inputText, // 텍스트
     required this.userVoicePath, // 사용자 음성 파일 경로. 앱 내부 경로임
     required this.ttsVoicePath, // TTS 음성 파일 경로. 앱 내부 경로임
+    this.title,
   });
 
   final String id;
   final String inputText;
   final String userVoicePath;
   final String ttsVoicePath;
+  final String? title;
 
   @override
   State<InputAnalyzingPage> createState() => InputAnalyzingState();
@@ -59,11 +61,13 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
             MaterialPageRoute(
               settings: const RouteSettings(name: "/show"),
               builder: (context) => ShowPage(
-                  id: widget.id,
-                  text: widget.inputText, //텍스트
-                  ttsAudio: widget.ttsVoicePath, //TTS 음성 파일 경로
-                  userAudio: widget.userVoicePath, //사용자 음성 파일 경로
-                  result: responseJson['temp_id']), //결과가 저장된 파이어베이스 경로
+                id: widget.id,
+                text: widget.inputText, //텍스트
+                ttsAudio: widget.ttsVoicePath, //TTS 음성 파일 경로
+                userAudio: widget.userVoicePath, //사용자 음성 파일 경로
+                result: responseJson['temp_id'],
+                title: widget.title,
+              ), //결과가 저장된 파이어베이스 경로
             ),
           );
         }

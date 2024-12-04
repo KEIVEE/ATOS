@@ -1,12 +1,13 @@
 //저장된 연습의 분석 결과를 불러오는 페이지
 
 import 'dart:async';
+import 'package:atos/control/ui.dart';
 import 'package:atos/inputs/graph.dart';
+import 'package:atos/practice/try.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -127,13 +128,13 @@ class ContentState extends State<ContentPage> {
   Future<void> downloadAndSave() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
-      resultFilePath = '${directory.path}/analysis.json';
-      standardFilePath = '${directory.path}/ttsVoice.wav';
-      recordedFilePath = '${directory.path}/userVoice.wav';
+      resultFilePath = '${directory.path}/${widget.title}/analysis.json';
+      standardFilePath = '${directory.path}/${widget.title}/ttsVoice.wav';
+      recordedFilePath = '${directory.path}/${widget.title}/userVoice.wav';
 
-      await Dio().download(resultDownloadURL, resultFilePath);
-      await Dio().download(ttsDownloadURL, standardFilePath);
-      await Dio().download(userDownloadURL, recordedFilePath);
+      //await Dio().download(resultDownloadURL, resultFilePath);
+      //await Dio().download(ttsDownloadURL, standardFilePath);
+      //await Dio().download(userDownloadURL, recordedFilePath);
     } catch (e) {
       debugPrint("파일 다운로드 오류: $e");
     }
@@ -587,7 +588,24 @@ class ContentState extends State<ContentPage> {
                     spacing: 0.0,
                     children: wordButtons,
                   ),
-                  ElevatedButton(onPressed: null, child: Text('연습하기')),
+                  SizedBox(height: 20),
+                  CustomedButton(
+                    text: '연습하기',
+                    textColor: Colors.white,
+                    buttonColor: Theme.of(context).primaryColor,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          settings: const RouteSettings(name: "/translating"),
+                          builder: (context) => TryPage(
+                            id: widget.id,
+                            title: widget.title,
+                            sentence: widget.sentence,
+                          ),
+                        ),
+                      );
+                    },
+                  )
                 ],
               ),
             );
