@@ -138,7 +138,7 @@ async def get_green_graph(user_id: str):
         today = datetime.now().date()
 
         green_graph = [0] * 7  
-        date = [(today-timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        week_date = [(today-timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
 
         for doc in query:
             login_date_str = doc.to_dict().get('login_date')
@@ -150,7 +150,7 @@ async def get_green_graph(user_id: str):
         dto = {
             'data': {
                 'green_graph': green_graph,
-                'date' : date
+                'week_dates' : week_date
             }
         }
 
