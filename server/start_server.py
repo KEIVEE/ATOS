@@ -130,7 +130,36 @@ async def get_login_history(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
-@app.get('')
+@app.get('/get-green-graph/{user_id}',description='사용자의 일주일간 잔디심기 기록 리턴', tags=['User api'])
+async def get_green_graph(user_id: str):
+    try:
+        query = userConnection_db.where('user_id', '==', user_id).stream()
+
+        today = datetime.now().date()
+
+        green_graph = [0] * 7
+
+        for doc in query:
+            login_date_str = doc.to_dict().get('login_date')
+            login_date = datetime.strptime(login_date_str, "%Y-%m-%d").date()
+            date_diff = (today - login_date).days
+            if date_diff < 7:
+                green_graph[6 - date_diff] = 1
+
+        dto = {
+            'data': {
+                'green_graph': green_graph
+            }
+        }
+
+        # dto = {
+        #     'data' : green_graph
+        # }
+
+        return dto
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
     
 
