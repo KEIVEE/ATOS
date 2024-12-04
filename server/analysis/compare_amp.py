@@ -1,6 +1,6 @@
 import numpy as np
 
-def compare_amplitude_differences(user_word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold = 5600):
+def compare_amplitude_differences(user_word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold = 10000):
     threshold = 5600
     # 데이터 타입을 float으로 변환하여 오버플로우 방지
     filtered_data = filtered_data.astype(np.float32)

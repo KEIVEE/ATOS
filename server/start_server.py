@@ -179,7 +179,9 @@ async def set_user(request: UserDTO):
         user_save_dto = {
             'user_id': request.user_id,
             'region': request.region,
-            'sex': request.sex
+            'sex': request.sex,
+            'low_pitch': 50,
+            'high_pitch': 300
         }
 
         user_ref = userData_db.document(request.user_id)
@@ -206,11 +208,11 @@ async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(..
     try:
         upload_dir = "server/pitch_audio"
         os.makedirs(upload_dir, exist_ok=True)
-        low_voice_path = os.path.join(upload_dir, low.filename)
+        low_voice_path = os.path.join(upload_dir, 'low'+low.filename)
         with open(low_voice_path, "wb") as buffer:
             shutil.copyfileobj(low.file, buffer)
 
-        high_voice_path = os.path.join(upload_dir, high.filename)
+        high_voice_path = os.path.join(upload_dir, 'high'+high.filename)
         with open(high_voice_path, "wb") as buffer:
             shutil.copyfileobj(high.file, buffer)
 
@@ -470,31 +472,20 @@ async def save_user_practice(request: SavePracticeDTO):
     try:
         user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
         user_practice_ref = list(user_practice_ref)
-        if len([doc for doc in user_practice_ref]) > 0:
-            audio_db_collection = 'temp/' + str(request.temp_id) + '/'
+        if user_practice_ref:
+            audio_db_collection = 'temp/' + request.temp_id + '/'
             blob = bucket.blob(audio_db_collection + 'userVoice.wav')
             blob3 = bucket.blob(audio_db_collection + 'analysis.json')
             user_voice = blob.download_as_string()
             analysis_result = blob3.download_as_string()
 
             saved_date = user_practice_ref[0].to_dict().get('date')
-            practice_date = user_practice_ref[0].to_dict().get('practice_date')
-
-            date = datetime.now()
-            practice_date.append(str(date.strftime("%Y-%m-%d")))
 
             practice_save_db = 'userPractice/'+str(request.user_id)+ saved_date +'/'
             blob = bucket.blob(practice_save_db + 'userVoice.wav')
             blob.upload_from_string(user_voice, content_type="audio/wav")
             blob = bucket.blob(practice_save_db + 'analysis.json')
             blob.upload_from_string(analysis_result, content_type="application/json")
-
-            user_practice_save_dto = {
-                'practice_date': practice_date,
-            }
-
-            for doc in user_practice_ref:
-                userPractice_db.document(doc.id).update(user_practice_save_dto)
 
             return True
 
@@ -668,13 +659,12 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             tts_word_intervals = future_tts_word_intervals.result()
 
         
-        threshold_value = 5600 # 적절한 값 정하기
 
         # 멀티스레딩을 사용하여 세 가지 작업을 병렬로 수행
         with ThreadPoolExecutor() as executor:
-            future_amp_result = executor.submit(compare_amplitude_differences, word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate, threshold_value)
+            future_amp_result = executor.submit(compare_amplitude_differences, word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate)
             future_pitch_result = executor.submit(calculate_pitch_differences, word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
-            future_segments_result = executor.submit(compare_pitch_differences, word_intervals, pitch_values, tts_word_intervals, pitch_values_tts, time_steps, time_steps_tts, 20)
+            future_segments_result = executor.submit(compare_pitch_differences, word_intervals, pitch_values, tts_word_intervals, pitch_values_tts, time_steps, time_steps_tts)
 
             # 결과를 기다림
             comp_amp_result, max_word = future_amp_result.result()
