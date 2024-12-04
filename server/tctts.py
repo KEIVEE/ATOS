@@ -1,12 +1,21 @@
 import requests 
 import time
-from server.settings import TC_TTS_KEY
+from server.settings import TC_TTS_KEY, TC_TTS_KEY2, TC_TTS_KEY3
 
 #actor_id = '648aaee9248bcd37dad435e6'
 
-def getTCTTS(text):
+def getTCTTS(text, theme=2):
+
+    selected_key = ''
+    if theme == 1:
+        selected_key = TC_TTS_KEY
+    elif theme == 2:
+        selected_key = TC_TTS_KEY2
+    elif theme == 3:
+        selected_key = TC_TTS_KEY3
+
     header = {
-        'Authorization': f'Bearer {TC_TTS_KEY}'
+        'Authorization': f'Bearer {selected_key}'
     }
     r = requests.get('https://typecast.ai/api/actor', headers=header)
     my_actors = r.json()['result']

@@ -311,12 +311,15 @@ async def translate_text(request: TransTextDTO):
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
         audio = None
-        if request.theme == '성급한':
-            audio = tts.getTTS(translated_text, request.sex, speaking_rate=1.4)
-        elif request.theme == '느긋한':
-            audio = tts.getTTS(translated_text, request.sex, speaking_rate=1.0)
-        elif request.theme == '차분한':
+        if request.theme == '아나운서':
+            audio = tctts.getTCTTS(translated_text,1)
+        elif request.theme == '일상':
+            audio = tctts.getTCTTS(translated_text,2)
+        elif request.theme == '발표':
+            audio = tctts.getTCTTS(translated_text,3)
+        else :
             audio = tctts.getTCTTS(translated_text)
+    
         
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
         blob.upload_from_string(audio, content_type="audio/wav")
