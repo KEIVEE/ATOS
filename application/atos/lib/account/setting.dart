@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:atos/control/ui.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -73,7 +74,7 @@ class SettingState extends State<SettingPage> {
 
       debugPrint(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && mounted) {
         setState(() {
           region = newRegion;
         });
@@ -81,9 +82,11 @@ class SettingState extends State<SettingPage> {
           SnackBar(content: Text('지역이 성공적으로 변경되었습니다.')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('지역 변경에 실패했습니다.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('지역 변경에 실패했습니다.')),
+          );
+        }
       }
     }
   }
@@ -108,15 +111,17 @@ class SettingState extends State<SettingPage> {
         nicknameVacant = true;
       });
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('닉네임이 변경되었습니다.')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('닉네임이 변경되었습니다.')),
+      );
+    }
   }
 
   //녹음기 권한 받아와서 시작하기
   Future<void> _initRecorder() async {
     var status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
+    if (status != PermissionStatus.granted && mounted) {
       // 권한 거부 처리
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('마이크 권한이 필요합니다.')),
@@ -179,12 +184,12 @@ class SettingState extends State<SettingPage> {
     try {
       final response = await request.send();
       if (response.statusCode == 200) {
-        print('Low pitch voice data uploaded successfully');
+        debugPrint('Low pitch voice data uploaded successfully');
       } else {
-        print('Error uploading low pitch voice data');
+        debugPrint('Error uploading low pitch voice data');
       }
     } catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -204,12 +209,12 @@ class SettingState extends State<SettingPage> {
     try {
       final response = await request.send();
       if (response.statusCode == 200) {
-        print('High pitch voice data uploaded successfully');
+        debugPrint('High pitch voice data uploaded successfully');
       } else {
-        print('Error uploading high pitch voice data');
+        debugPrint('Error uploading high pitch voice data');
       }
     } catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -225,30 +230,42 @@ class SettingState extends State<SettingPage> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ElevatedButton(
-                    onPressed: _isRecordingLow
+                  const SizedBox(height: 32),
+                  CustomedButton(
+                    text: _isRecordingLow ? '녹음 그만하기' : '녹음하기',
+                    buttonColor: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
+                    onTap: _isRecordingLow
                         ? () {
                             _stopLowRecording();
+                            setState(() {}); // 녹음 중지 후 상태 업데이트
                           }
                         : () {
                             _startRecordingLow();
+                            setState(() {}); // 녹음 시작 후 상태 업데이트
                           },
-                    child: Text(_isRecordingLow ? '녹음 그만하기' : '녹음하기'),
                   ),
-                  ElevatedButton(
-                    onPressed: !lowTried // 녹음이 중지되면 저장 버튼 활성화
+                  const SizedBox(height: 16),
+                  CustomedButton(
+                    text: '저장',
+                    buttonColor:
+                        lowTried ? Theme.of(context).primaryColor : Colors.grey,
+                    textColor: Colors.white,
+                    onTap: !lowTried // 녹음이 중지되면 저장 버튼 활성화
                         ? null
                         : () {
                             sendLowPitchVoiceData(); // 서버로 전송
                             Navigator.pop(context);
                           },
-                    child: Text('저장'),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
+                  const SizedBox(height: 16),
+                  CustomedButton(
+                    text: '취소',
+                    buttonColor: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
+                    onTap: () {
                       Navigator.pop(context);
                     },
-                    child: Text('취소'),
                   ),
                 ],
               );
@@ -271,8 +288,12 @@ class SettingState extends State<SettingPage> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ElevatedButton(
-                    onPressed: _isRecordingHigh
+                  const SizedBox(height: 32),
+                  CustomedButton(
+                    text: _isRecordingHigh ? '녹음 그만하기' : '녹음하기',
+                    buttonColor: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
+                    onTap: _isRecordingHigh
                         ? () {
                             _stopHighRecording();
                             setState(() {}); // 녹음 중지 후 상태 업데이트
@@ -281,22 +302,29 @@ class SettingState extends State<SettingPage> {
                             _startRecordingHigh();
                             setState(() {}); // 녹음 시작 후 상태 업데이트
                           },
-                    child: Text(_isRecordingHigh ? '녹음 그만하기' : '녹음하기'),
                   ),
-                  ElevatedButton(
-                    onPressed: !highTried // 녹음이 중지되면 저장 버튼 활성화
+                  const SizedBox(height: 16),
+                  CustomedButton(
+                    text: '저장',
+                    buttonColor: highTried
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey,
+                    textColor: Colors.white,
+                    onTap: !highTried // 녹음이 중지되면 저장 버튼 활성화
                         ? null
                         : () {
                             sendHighPitchVoiceData(); // 서버로 전송
                             Navigator.pop(context);
                           },
-                    child: Text('저장'),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
+                  const SizedBox(height: 16),
+                  CustomedButton(
+                    text: '취소',
+                    buttonColor: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
+                    onTap: () {
                       Navigator.pop(context);
                     },
-                    child: Text('취소'),
                   ),
                 ],
               );
@@ -310,83 +338,109 @@ class SettingState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('설정'),
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(16),
-        children: [
-          TextField(
-            controller: _nicknameController,
-            decoration: InputDecoration(
-              labelText: '닉네임',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (text) {
-              setState(() {
-                newNickname = text;
-                nicknameVacant = false;
-                if (text == "") {
-                  nicknameVacant = true;
-                }
-              });
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
             },
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: nicknameVacant ? null : _updateNickname,
-            child: Text('닉네임 변경'),
-          ),
-          const SizedBox(height: 16),
-          Text('현재 지역: $region'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              // 지역 변경 다이얼로그
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('지역 변경'),
-                    content: DropdownButton<String>(
-                      value: region,
-                      onChanged: (newRegion) {
-                        if (newRegion != null) {
-                          _updateRegion(newRegion);
-                          Navigator.pop(context);
-                        }
-                      },
-                      items: regions
-                          .map((region) => DropdownMenuItem<String>(
-                                value: region,
-                                child: Text(region),
-                              ))
-                          .toList(),
-                    ),
+          title: const Text('설정'),
+        ),
+        body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: ListView(
+            padding: EdgeInsets.all(16),
+            children: [
+              Text(
+                '계정 관련 설정',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _nicknameController,
+                decoration: ShortInputText(hint: '닉네임 변경하기'),
+                onChanged: (text) {
+                  setState(() {
+                    newNickname = text;
+                    nicknameVacant = false;
+                    if (text == "") {
+                      nicknameVacant = true;
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              CustomedButton(
+                text: '닉네임 변경',
+                buttonColor: nicknameVacant
+                    ? Colors.grey
+                    : Theme.of(context).primaryColor,
+                textColor: Colors.white,
+                onTap: nicknameVacant ? null : _updateNickname,
+              ),
+              const SizedBox(height: 32),
+              Text(
+                '지역 관련 설정',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              CustomedButton(
+                text: '지역 변경',
+                buttonColor: Theme.of(context).primaryColor,
+                textColor: Colors.white,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text('지역 변경하기'),
+                        content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('현재 지역: $region'),
+                              ...regions.map(
+                                (region) => ListTile(
+                                  title: Text(region),
+                                  onTap: () {
+                                    _updateRegion(region);
+                                    Navigator.pop(context);
+                                    SnackBar(
+                                      content: Text('지역이 변경되었습니다.'),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ]),
+                      );
+                    },
                   );
                 },
-              );
-            },
-            child: Text('지역 변경'),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                '음성 관련 설정',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              CustomedButton(
+                text: '저음 변경하기',
+                buttonColor: Theme.of(context).primaryColor,
+                textColor: Colors.white,
+                onTap: _showLowPitchDialog,
+              ),
+              const SizedBox(height: 16),
+              CustomedButton(
+                text: '고음 변경하기',
+                buttonColor: Theme.of(context).primaryColor,
+                textColor: Colors.white,
+                onTap: _showHighPitchDialog,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _showLowPitchDialog,
-            child: Text('저음 변경하기'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _showHighPitchDialog,
-            child: Text('고음 변경하기'),
-          ),
-        ],
-      ),
-    );
+        ));
   }
 }

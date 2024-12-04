@@ -1,6 +1,6 @@
 //회원가입하는 화면
-
 import 'dart:convert';
+import 'package:atos/control/ui.dart';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -141,28 +141,17 @@ class RegisterState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
-        backgroundColor: Colors.white,
-        title: Text(widget.loginTitle),
-      ),
-      body: Center(
+        body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             // Nickname field
             TextField(
-              decoration: const InputDecoration(
-                labelText: '닉네임',
-                border: OutlineInputBorder(),
-                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
-              ),
+              decoration: ShortInputText(hint: '닉네임을 입력해 주세요.'),
               onChanged: (text) {
                 nickname = text;
               },
@@ -170,66 +159,38 @@ class RegisterState extends State<RegisterPage> {
 
             // ID field and check button
             TextField(
-              decoration: const InputDecoration(
-                labelText: 'ID',
-                border: OutlineInputBorder(),
-                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
-              ),
+              decoration: ShortInputText(hint: 'ID를 입력해 주세요.'),
               onChanged: (text) {
                 id = text;
               },
             ),
-            OutlinedButton(
-              onPressed: checkIdAvailability,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: const Text('아이디 확인'),
+            CustomedButton(
+              text: '중복확인',
+              buttonColor: Theme.of(context).primaryColor,
+              textColor: Colors.white,
+              onTap: checkIdAvailability,
             ),
             Text(
               idCheckMessage,
               style: TextStyle(
+                fontWeight: FontWeight.bold,
                 color: idCheckMessage == '사용할 수 있는 id입니다.'
-                    ? Colors.green
+                    ? Theme.of(context).primaryColor
                     : Colors.red,
               ),
             ),
-            DropdownButton<String>(
-              value: selectedGender,
-              items: <String>['남성', '여성'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedGender = newValue!;
-                });
-              },
-            ),
-
+            const SizedBox(height: 50),
             // Password fields
             TextField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '비밀번호',
-                border: OutlineInputBorder(),
-                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
-              ),
+              controller: ObscuringTextEditingController(),
+              decoration: ShortInputText(hint: '비밀번호를 입력해 주세요.'),
               onChanged: (text) {
                 password = text;
               },
             ),
             TextField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '비밀번호 확인',
-                border: OutlineInputBorder(),
-                constraints: BoxConstraints(maxHeight: 50.0, maxWidth: 250.0),
-              ),
+              controller: ObscuringTextEditingController(),
+              decoration: ShortInputText(hint: '비밀번호를 다시 입력해 주세요.'),
               onChanged: (text) {
                 setState(() {
                   passwordCheck = text;
@@ -240,45 +201,63 @@ class RegisterState extends State<RegisterPage> {
             if (!correction)
               const Text(
                 '비밀번호가 일치하지 않습니다.',
-                style: TextStyle(color: Colors.red),
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
               ),
 
-            const SizedBox(height: 20),
-
-            DropdownButton(
-                value: region,
-                items: regions
-                    .map((e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    region = value!;
-                  });
-                }),
-
-            // Register button
-            OutlinedButton(
-              onPressed: registerUser,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                DropdownButton<String>(
+                  value: selectedGender,
+                  items: <String>['남성', '여성'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedGender = newValue!;
+                    });
+                  },
                 ),
-              ),
-              child: const Text('가입하기'),
+                const SizedBox(width: 50),
+                DropdownButton(
+                    value: region,
+                    items: regions
+                        .map((e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(e),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        region = value!;
+                      });
+                    }),
+              ],
+            ),
+            const SizedBox(height: 50),
+            // Register button
+            CustomedButton(
+              text: '회원가입',
+              buttonColor: Theme.of(context).primaryColor,
+              textColor: Colors.white,
+              onTap: registerUser,
             ),
 
             Text(
               registerCheckMessage,
               style: TextStyle(
                 color: Colors.red,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
       ),
-    );
+    ));
   }
 }

@@ -1,5 +1,6 @@
 //로그인 페이지
 
+import 'package:atos/control/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:atos/managing/manage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,68 +64,39 @@ class LoginState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
-        backgroundColor: Colors.white,
-        title: const Text('로그인'),
-      ),
-      body: Center(
+        body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
-              decoration: const InputDecoration(
-                labelText: 'ID',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(0)),
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                  ),
-                ),
-                constraints: BoxConstraints(
-                  maxHeight: 50.0,
-                  maxWidth: 250.0,
-                ),
-              ),
+              decoration: ShortInputText(hint: 'ID를 입력해 주세요.'),
               onChanged: (text) {
                 id = text;
               },
             ),
             const SizedBox(height: 10),
             TextField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '비밀번호',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(0)),
-                  borderSide: BorderSide(
-                    color: Colors.grey,
-                  ),
-                ),
-                constraints: BoxConstraints(
-                  maxHeight: 50.0,
-                  maxWidth: 250.0,
-                ),
-              ),
+              controller: ObscuringTextEditingController(),
+              decoration: ShortInputText(hint: '비밀번호를 입력해 주세요.'),
               onChanged: (text) {
                 password = text;
               },
             ),
             const SizedBox(height: 20),
-            OutlinedButton(
-              onPressed: signInWithEmailAndPassword,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: const Text('로그인'),
+            CustomedButton(
+              text: '로그인',
+              buttonColor: const Color.fromRGBO(42, 52, 110, 1),
+              textColor: Colors.white,
+              onTap: () {
+                setState(() {
+                  loginTried = true;
+                });
+                signInWithEmailAndPassword();
+              },
             ),
             if (loginFailed)
               const Text(
@@ -134,6 +106,6 @@ class LoginState extends State<LoginPage> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

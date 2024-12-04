@@ -8,6 +8,7 @@ import 'package:atos/account/login.dart';
 import 'package:atos/account/register.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:atos/firebase_options.dart';
+import 'package:atos/control/ui.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,19 +26,21 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'ATOS', //수정
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+          colorScheme: ColorScheme.light(
+            primary: Color.fromRGBO(42, 52, 110, 1), // 주요 색상
+            secondary: Colors.white, // 보조 색상
+          ),
           useMaterial3: true,
         ),
         initialRoute: '/',
         routes: {
-          '/': (context) => const MyHomePage(title: 'ATOS'),
+          '/': (context) => const MyHomePage(),
         });
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -47,45 +50,37 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(widget.title),
-      ),
+      backgroundColor: Color.fromRGBO(42, 52, 110, 1),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const SizedBox(height: 20),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    settings: const RouteSettings(name: "/login"),
-                    builder: (context) => const LoginPage(),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('로그인'),
-            ),
+            const SizedBox(height: 400),
+            CustomedButton(
+                text: '로그인',
+                buttonColor: Colors.white,
+                textColor: Theme.of(context).primaryColor,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: "/login"),
+                      builder: (context) => const LoginPage(),
+                    ),
+                  );
+                }),
             const SizedBox(height: 10),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    settings: const RouteSettings(name: "/register"),
-                    builder: (context) => const RegisterPage(),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0))),
-              child: const Text('회원가입'),
-            ),
+            CustomedButton(
+                text: '회원가입',
+                buttonColor: Colors.white,
+                textColor: Theme.of(context).primaryColor,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: "/register"),
+                      builder: (context) => const RegisterPage(),
+                    ),
+                  );
+                }),
           ],
         ),
       ),

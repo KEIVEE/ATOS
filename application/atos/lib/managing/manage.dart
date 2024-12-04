@@ -45,10 +45,13 @@ class ManageState extends State<ManagePage>
         appBar: AppBar(
           centerTitle: true,
           automaticallyImplyLeading: false,
-          backgroundColor: Colors.white,
-          title: Text('안녕하세요, ${auth.currentUser?.displayName}님'),
+          backgroundColor: Theme.of(context).primaryColor,
+          title: Text('안녕하세요, ${auth.currentUser?.displayName}님',
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
         ),
         bottomNavigationBar: BottomNavigationBar(
+            elevation: 0,
             onTap: (int index) {
               controller.animateTo(index);
             },
@@ -58,13 +61,17 @@ class ManageState extends State<ManagePage>
               BottomNavigationBarItem(icon: Icon(Icons.add), label: '입력'),
               BottomNavigationBarItem(icon: Icon(Icons.book), label: '연습'),
             ]),
-        body: TabBarView(
-            physics: const NeverScrollableScrollPhysics(),
-            controller: controller,
-            children: [
-              HomePage(id: widget.id),
-              AddPage(id: widget.id),
-              PracticePage(id: widget.id),
-            ]));
+        body: GestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+            },
+            child: TabBarView(
+                physics: const NeverScrollableScrollPhysics(),
+                controller: controller,
+                children: [
+                  HomePage(id: widget.id),
+                  AddPage(id: widget.id),
+                  PracticePage(id: widget.id),
+                ])));
   }
 }

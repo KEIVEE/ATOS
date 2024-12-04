@@ -18,33 +18,50 @@ class TitleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            settings: RouteSettings(name: "/content"),
-            builder: (context) => ContentPage(
-              id: id,
-              title: title,
-              sentence: sentence,
-              path: path,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10), // 원하는 여백 설정
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                settings: RouteSettings(name: "/content"),
+                builder: (context) => ContentPage(
+                  id: id,
+                  title: title,
+                  sentence: sentence,
+                  path: path,
+                ),
+              ),
+            );
+          },
+          child: Card(
+            elevation: 5,
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Column(
+                    children: [
+                      SizedBox(height: 10),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
+                      ),
+                      SizedBox(height: 10),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        );
-      },
-      style: OutlinedButton.styleFrom(
-        padding:
-            EdgeInsets.symmetric(horizontal: 20, vertical: 20), // 버튼의 패딩 조정
-        textStyle: TextStyle(fontSize: 24), // 텍스트 스타일 조정
-        minimumSize: Size(220, 80), // 버튼의 최소 크기 조정
-        side: BorderSide(color: Colors.indigo, width: 2), // 테두리 색상과 두께 조정
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4), // 모서리를 더 각지게 조정
         ),
-      ),
-      child: Text(
-        title,
-        style: TextStyle(color: Colors.indigo), // 텍스트 색상 조정
       ),
     );
   }

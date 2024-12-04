@@ -1,6 +1,7 @@
 // 최고피치 최저피치 기록 페이지
 
 import 'dart:io';
+import 'package:atos/control/ui.dart';
 import 'package:atos/control/uri.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -85,14 +86,16 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
 
     try {
       final response = await request.send();
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('회원가입 성공. 로그인 해 주세요.')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('음성 데이터 업로드 중 오류가 발생했습니다.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('음성 데이터 업로드 중 오류가 발생했습니다.')),
+          );
+        }
       }
 
       //가입이 끝났으니 초기화면 = main.dart로 이동
@@ -114,7 +117,7 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('음성 등록'),
+        title: const Text('음성 데이터 등록하기'),
         automaticallyImplyLeading: false,
       ),
       body: Center(
@@ -122,25 +125,35 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             // 저음 입력 버튼
-            ElevatedButton(
-              onPressed: _isRecordingLow
+            CustomedButton(
+              text: _isRecordingLow ? '녹음 끝내기' : '저음 입력하기',
+              buttonColor: Colors.blue,
+              textColor: Colors.white,
+              onTap: _isRecordingLow
                   ? () => _stopRecording('low')
                   : () => _startRecording('low'),
-              child: Text(_isRecordingLow ? '녹음 끝내기' : '저음 입력하기'),
             ),
+            const Text('현재 저음 고음값 가져올 수 있나?'),
+            const SizedBox(height: 20),
             // 고음 입력 버튼
-            ElevatedButton(
-              onPressed: _isRecordingHigh
+            CustomedButton(
+              text: _isRecordingHigh ? '녹음 끝내기' : '고음 입력하기',
+              buttonColor: Colors.blue,
+              textColor: Colors.white,
+              onTap: _isRecordingHigh
                   ? () => _stopRecording('high')
                   : () => _startRecording('high'),
-              child: Text(_isRecordingHigh ? '녹음 끝내기' : '고음 입력하기'),
             ),
+
+            const SizedBox(height: 50),
             // 확인 버튼 (녹음된 파일을 서버로 전송)
-            ElevatedButton(
-              onPressed: (_lowPitchPath.isNotEmpty && _highPitchPath.isNotEmpty)
+            CustomedButton(
+              text: '확인',
+              buttonColor: Colors.blue,
+              textColor: Colors.white,
+              onTap: _lowPitchPath.isNotEmpty && _highPitchPath.isNotEmpty
                   ? _sendVoiceData
                   : null,
-              child: const Text('확인'),
             ),
           ],
         ),
