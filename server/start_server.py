@@ -8,7 +8,7 @@ from firebase_admin import firestore
 from firebase_admin import storage
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse, Response, JSONResponse
 from io import BytesIO
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -200,7 +200,7 @@ async def get_user(user_id: str):
         user = userData_db.document(user_id).get().to_dict()
 
         if not user:
-            raise HTTPException(status_code=404, detail="사용자 정보가 없습니다.")
+            return Response(status_code=204, content="사용자 정보가 없습니다.")
         
         return user
         
@@ -224,7 +224,9 @@ async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(..
         high_pitch = get_pitch_median(high_voice_path)
 
         low_pitch = max(50, low_pitch) # 목소리 임계값 설정
-        high_pitch = min(300, high_pitch)
+        low_pitch = min(90, low_pitch)
+        high_pitch = min(400, high_pitch)
+        high_pitch = max(250, high_pitch)
 
         user_pitch_save_dto = {
             'low_pitch': int(low_pitch),
@@ -254,6 +256,7 @@ async def set_user_pitch(low: UploadFile = File(...), user_id: str = Form(...)):
         low_pitch = get_pitch_median(low_voice_path)
 
         low_pitch = max(50, low_pitch)
+        low_pitch = min(90, low_pitch)
 
         user_pitch_save_dto = {
             'low_pitch': int(low_pitch)
@@ -281,7 +284,8 @@ async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...))
 
         high_pitch = get_pitch_median(high_voice_path)
 
-        high_pitch = min(300, high_pitch)
+        high_pitch = min(400, high_pitch)
+        high_pitch = max(250, high_pitch)
 
         user_pitch_save_dto = {
             'high_pitch': int(high_pitch)
@@ -322,7 +326,7 @@ async def translate_text(request: TransTextDTO):
         audio = None
         if request.theme == '아나운서':
             audio = tctts.getTCTTS(translated_text,1)
-        elif request.theme == '일상':
+        elif request.theme == '일상생활':
             audio = tctts.getTCTTS(translated_text,2)
         elif request.theme == '발표':
             audio = tctts.getTCTTS(translated_text,3)
@@ -365,11 +369,13 @@ async def get_tts(request: GetTTSReqDTO):
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
         audio = None
-        if request.theme == '성급한':
-            audio = tts.getTTS(request.text, request.sex, speaking_rate=1.4)
-        elif request.theme == '느긋한':
-            audio = tts.getTTS(request.text, request.sex, speaking_rate=1.0)
-        elif request.theme == '차분한':
+        if request.theme == '아나운서':
+            audio = tctts.getTCTTS(request.text,1)
+        elif request.theme == '일상생활':
+            audio = tctts.getTCTTS(request.text,2)
+        elif request.theme == '발표':
+            audio = tctts.getTCTTS(request.text,3)
+        else :
             audio = tctts.getTCTTS(request.text)
 
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
@@ -438,9 +444,9 @@ async def get_user_practice(user_id : str) :
             practices.append({**doc.to_dict(), 'doc_id': doc.id})
 
         if not practices:
-            return None
+            return Response(status_code=204, content="연습 데이터가 없습니다.")
         
-        practices.sort(key=lambda x: datetime.strptime(x['date'], "%Y-%m-%d"), reverse=True)
+        practices.sort(key=lambda x: datetime.strptime(x['detail_date'], "%Y-%m-%d %H:%M:%S.%f"), reverse=True)
 
         return practices
     
@@ -458,9 +464,9 @@ async def get_user_practice_recent(user_id : str) :
             practices.append({**doc.to_dict(), 'doc_id': doc.id})
 
         if not practices:
-            return "No practice data"
+            return Response(status_code=204, content="연습 데이터가 없습니다.")
         
-        practices.sort(key=lambda x: datetime.strptime(x['date'], "%Y-%m-%d"), reverse=True)
+        practices.sort(key=lambda x: datetime.strptime(x['detail_date'], "%Y-%m-%d %H:%M:%S.%f"), reverse=True)
         return practices[0]
     
     except Exception as e:
@@ -523,6 +529,14 @@ async def save_user_practice(request: SavePracticeDTO):
             blob = bucket.blob(practice_save_db + 'analysis.json')
             blob.upload_from_string(analysis_result, content_type="application/json")
 
+            date = datetime.now()
+            user_practice_save_dto = {
+                'date': str(date.date()),
+                'detail_date': str(date)
+            }
+
+            userPractice_db.document(user_practice_ref[0].id).update(user_practice_save_dto)
+
             return True
 
 
@@ -552,6 +566,7 @@ async def save_user_practice(request: SavePracticeDTO):
             'title': str(request.title),
             'text': text,
             'date': str(date.date()),
+            'detail_date': str(date),
             'data_path': practice_save_db,
             'first_audio': first_audio
         }
