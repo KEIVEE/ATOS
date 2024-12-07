@@ -141,7 +141,8 @@ async def get_green_graph(user_id: str):
         today = datetime.now().date()
 
         green_graph = [0] * 7  
-        week_date = [(today-timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        week_date = [(today-timedelta(days=i)).strftime("%m-%d") for i in range(7)]
+        week_date.reverse()
 
         for doc in query:
             login_date_str = doc.to_dict().get('login_date')
@@ -150,10 +151,13 @@ async def get_green_graph(user_id: str):
             if date_diff < 7:
                 green_graph[6 - date_diff] = 1
 
+        num = sum(green_graph)
+
         dto = {
             'data': {
                 'green_graph': green_graph,
-                'week_dates' : week_date
+                'week_dates' : week_date,
+                'num': str(num)
             }
         }
 
@@ -434,9 +438,41 @@ async def get_user_practice(user_id : str) :
             practices.append({**doc.to_dict(), 'doc_id': doc.id})
 
         if not practices:
-            raise HTTPException(status_code=404, detail="사용자의 연습 데이터가 없습니다.")
+            return None
         
+        practices.sort(key=lambda x: datetime.strptime(x['date'], "%Y-%m-%d"), reverse=True)
+
         return practices
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-user-practice-recent/{user_id}", description="사용자의 최근 연습 데이터 조회", tags=['Practice api'])
+async def get_user_practice_recent(user_id : str) :
+    try:
+        query = userPractice_db.where("user_id", "==", user_id).stream()
+
+        practices = []
+        
+        for doc in query:
+            practices.append({**doc.to_dict(), 'doc_id': doc.id})
+
+        if not practices:
+            return "No practice data"
+        
+        practices.sort(key=lambda x: datetime.strptime(x['date'], "%Y-%m-%d"), reverse=True)
+        return practices[0]
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-user-practice-num/{user_id}", description="사용자의 연습 데이터 개수 조회", tags=['Practice api'])
+async def get_user_practice_num(user_id : str) :
+    try:
+        query = userPractice_db.where("user_id", "==", user_id).stream()
+
+        num = len([doc for doc in query])
+        return num
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
