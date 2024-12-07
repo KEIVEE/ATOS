@@ -8,7 +8,7 @@ from firebase_admin import firestore
 from firebase_admin import storage
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse, Response, JSONResponse
 from io import BytesIO
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -141,7 +141,8 @@ async def get_green_graph(user_id: str):
         today = datetime.now().date()
 
         green_graph = [0] * 7  
-        week_date = [(today-timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+        week_date = [(today-timedelta(days=i)).strftime("%m-%d") for i in range(7)]
+        week_date.reverse()
 
         for doc in query:
             login_date_str = doc.to_dict().get('login_date')
@@ -150,10 +151,13 @@ async def get_green_graph(user_id: str):
             if date_diff < 7:
                 green_graph[6 - date_diff] = 1
 
+        num = sum(green_graph)
+
         dto = {
             'data': {
                 'green_graph': green_graph,
-                'week_dates' : week_date
+                'week_dates' : week_date,
+                'num': str(num)
             }
         }
 
@@ -196,7 +200,7 @@ async def get_user(user_id: str):
         user = userData_db.document(user_id).get().to_dict()
 
         if not user:
-            raise HTTPException(status_code=404, detail="사용자 정보가 없습니다.")
+            return Response(status_code=204, content="사용자 정보가 없습니다.")
         
         return user
         
@@ -220,7 +224,9 @@ async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(..
         high_pitch = get_pitch_median(high_voice_path)
 
         low_pitch = max(50, low_pitch) # 목소리 임계값 설정
-        high_pitch = min(300, high_pitch)
+        low_pitch = min(90, low_pitch)
+        high_pitch = min(400, high_pitch)
+        high_pitch = max(250, high_pitch)
 
         user_pitch_save_dto = {
             'low_pitch': int(low_pitch),
@@ -250,6 +256,7 @@ async def set_user_pitch(low: UploadFile = File(...), user_id: str = Form(...)):
         low_pitch = get_pitch_median(low_voice_path)
 
         low_pitch = max(50, low_pitch)
+        low_pitch = min(90, low_pitch)
 
         user_pitch_save_dto = {
             'low_pitch': int(low_pitch)
@@ -277,7 +284,8 @@ async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...))
 
         high_pitch = get_pitch_median(high_voice_path)
 
-        high_pitch = min(300, high_pitch)
+        high_pitch = min(400, high_pitch)
+        high_pitch = max(250, high_pitch)
 
         user_pitch_save_dto = {
             'high_pitch': int(high_pitch)
@@ -318,7 +326,7 @@ async def translate_text(request: TransTextDTO):
         audio = None
         if request.theme == '아나운서':
             audio = tctts.getTCTTS(translated_text,1)
-        elif request.theme == '일상':
+        elif request.theme == '일상생활':
             audio = tctts.getTCTTS(translated_text,2)
         elif request.theme == '발표':
             audio = tctts.getTCTTS(translated_text,3)
@@ -361,11 +369,13 @@ async def get_tts(request: GetTTSReqDTO):
         audio_db_collection = 'gcTTS/'
         audio_type = '.wav'
         audio = None
-        if request.theme == '성급한':
-            audio = tts.getTTS(request.text, request.sex, speaking_rate=1.4)
-        elif request.theme == '느긋한':
-            audio = tts.getTTS(request.text, request.sex, speaking_rate=1.0)
-        elif request.theme == '차분한':
+        if request.theme == '아나운서':
+            audio = tctts.getTCTTS(request.text,1)
+        elif request.theme == '일상생활':
+            audio = tctts.getTCTTS(request.text,2)
+        elif request.theme == '발표':
+            audio = tctts.getTCTTS(request.text,3)
+        else :
             audio = tctts.getTCTTS(request.text)
 
         blob = bucket.blob(audio_db_collection + translated_text_ref.id + audio_type)
@@ -434,9 +444,41 @@ async def get_user_practice(user_id : str) :
             practices.append({**doc.to_dict(), 'doc_id': doc.id})
 
         if not practices:
-            raise HTTPException(status_code=404, detail="사용자의 연습 데이터가 없습니다.")
+            return Response(status_code=204, content="연습 데이터가 없습니다.")
         
+        practices.sort(key=lambda x: datetime.strptime(x['detail_date'], "%Y-%m-%d %H:%M:%S.%f"), reverse=True)
+
         return practices
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-user-practice-recent/{user_id}", description="사용자의 최근 연습 데이터 조회", tags=['Practice api'])
+async def get_user_practice_recent(user_id : str) :
+    try:
+        query = userPractice_db.where("user_id", "==", user_id).stream()
+
+        practices = []
+        
+        for doc in query:
+            practices.append({**doc.to_dict(), 'doc_id': doc.id})
+
+        if not practices:
+            return Response(status_code=204, content="연습 데이터가 없습니다.")
+        
+        practices.sort(key=lambda x: datetime.strptime(x['detail_date'], "%Y-%m-%d %H:%M:%S.%f"), reverse=True)
+        return practices[0]
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.get("/get-user-practice-num/{user_id}", description="사용자의 연습 데이터 개수 조회", tags=['Practice api'])
+async def get_user_practice_num(user_id : str) :
+    try:
+        query = userPractice_db.where("user_id", "==", user_id).stream()
+
+        num = len([doc for doc in query])
+        return num
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
@@ -487,6 +529,14 @@ async def save_user_practice(request: SavePracticeDTO):
             blob = bucket.blob(practice_save_db + 'analysis.json')
             blob.upload_from_string(analysis_result, content_type="application/json")
 
+            date = datetime.now()
+            user_practice_save_dto = {
+                'date': str(date.date()),
+                'detail_date': str(date)
+            }
+
+            userPractice_db.document(user_practice_ref[0].id).update(user_practice_save_dto)
+
             return True
 
 
@@ -516,6 +566,7 @@ async def save_user_practice(request: SavePracticeDTO):
             'title': str(request.title),
             'text': text,
             'date': str(date.date()),
+            'detail_date': str(date),
             'data_path': practice_save_db,
             'first_audio': first_audio
         }
