@@ -15,7 +15,7 @@ class AddState extends State<AddPage> {
   var inputText = ''; //입력한 텍스트
   var region = ''; //본인 지역
   bool willTranslate = true; //번역을 할 건가
-  String selectedTheme = '차분한'; //테마
+  String selectedTheme = '일상생활'; //테마
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +75,9 @@ class AddState extends State<AddPage> {
                                 });
                               },
                               items: <String>[
-                                '성급한',
-                                '느긋한',
-                                '차분한'
+                                '아나운서',
+                                '발표',
+                                '일상생활',
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,

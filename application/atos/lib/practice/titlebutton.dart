@@ -7,14 +7,15 @@ class TitleButton extends StatelessWidget {
   final String title;
   final String sentence;
   final String id;
-  final String path;
+  final String date;
 
-  const TitleButton(
-      {super.key,
-      required this.title, //제목
-      required this.id, //유저 아이디
-      required this.sentence, //문장
-      required this.path}); //파일 저장 경로
+  const TitleButton({
+    super.key,
+    required this.title, //제목
+    required this.id, //유저 아이디
+    required this.sentence, //문장
+    required this.date,
+  }); //파일 저장 경로
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,6 @@ class TitleButton extends StatelessWidget {
                   id: id,
                   title: title,
                   sentence: sentence,
-                  path: path,
                 ),
               ),
             );
@@ -41,7 +41,7 @@ class TitleButton extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Column(
@@ -57,6 +57,11 @@ class TitleButton extends StatelessWidget {
                       SizedBox(height: 10),
                     ],
                   ),
+                  Text(date,
+                      style: const TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
                 ],
               ),
             ),

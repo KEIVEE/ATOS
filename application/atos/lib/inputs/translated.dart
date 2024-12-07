@@ -167,15 +167,22 @@ class _TranslatedState extends State<TranslatedPage> {
             if (widget.translate)
               const Text(
                 '번역된 문장이에요',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
             const SizedBox(height: 10),
-            Text(
-              widget.translatedText,
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0), // 원하는 패딩 값 설정
+              child: Text(
+                widget.translatedText,
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
             ),
             const SizedBox(height: 20),
             // 분석 시작 버튼

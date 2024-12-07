@@ -60,13 +60,21 @@ class PracticeState extends State<PracticePage> {
                             child: CircularProgressIndicator(),
                           ),
                         ]);
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Column(
+                            children: [
+                              SizedBox(height: 50),
+                              Text('저장된 데이터가 없습니다.',
+                                  style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(
                           child: Text('Error: ${snapshot.error}'),
-                        );
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(
-                          child: Text('저장된 데이터가 없습니다.'),
                         );
                       } else {
                         return ListView.builder(
@@ -80,8 +88,7 @@ class PracticeState extends State<PracticePage> {
                               title: item['title'],
                               sentence: item['text'],
                               id: widget.id,
-                              path:
-                                  item['data_path'], //firebase storage에 저장된 경로.
+                              date: item['date'],
                               //분석 json, TTS음성, 유저음성이 담겨 있음
                             );
                           },

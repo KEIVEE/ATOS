@@ -132,12 +132,16 @@ class TryState extends State<TryPage> {
           children: <Widget>[
             const SizedBox(height: 20),
             const SizedBox(height: 10),
-            Text(
-              widget.sentence,
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0), // 원하는 패딩 값 설정
+              child: Text(
+                widget.sentence,
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
             ),
             const SizedBox(height: 20),
             // 분석 시작 버튼
@@ -179,12 +183,13 @@ class TryState extends State<TryPage> {
                                   settings: const RouteSettings(
                                       name: "/inputanalyzing"),
                                   builder: (context) => InputAnalyzingPage(
-                                      id: widget.id, //요청을 하기 위한 인자들은
-                                      inputText: widget.sentence, //텍스트
-                                      userVoicePath:
-                                          recordedFilePath, //녹음 파일 경로
-                                      ttsVoicePath:
-                                          standardFilePath))); // TTS 파일 경로
+                                        id: widget.id, //요청을 하기 위한 인자들은
+                                        inputText: widget.sentence, //텍스트
+                                        userVoicePath:
+                                            recordedFilePath, //녹음 파일 경로
+                                        ttsVoicePath: standardFilePath,
+                                        title: widget.title,
+                                      ))); // TTS 파일 경로
                             }
                           : null,
                     ),

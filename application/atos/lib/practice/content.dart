@@ -8,7 +8,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ContentPage extends StatefulWidget {
@@ -17,12 +16,10 @@ class ContentPage extends StatefulWidget {
     required this.id,
     required this.title,
     required this.sentence,
-    required this.path,
   });
   final String id;
   final String title;
   final String sentence;
-  final String path;
 
   @override
   State<ContentPage> createState() => ContentState();
@@ -36,7 +33,6 @@ class ContentState extends State<ContentPage> {
   String resultDownloadURL = '';
   String ttsDownloadURL = '';
   String userDownloadURL = '';
-  final FirebaseStorage _storage = FirebaseStorage.instance;
   bool twoGraphs = false;
 
   String jsonData = '';
@@ -91,37 +87,8 @@ class ContentState extends State<ContentPage> {
   }
 
   Future<void> fetchResultAndAudios() async {
-    await setDownloadUrl();
     await downloadAndSave();
     await readJsonData();
-  }
-
-  //파이어스토어에 저장된 파일의 다운로드 URL을 가져오는 함수
-  Future<void> setDownloadUrl() async {
-    try {
-      String resultUrl = await _storage
-          .ref()
-          .child(widget.path)
-          .child('analysis.json')
-          .getDownloadURL();
-      String ttsUrl = await _storage
-          .ref()
-          .child(widget.path)
-          .child('ttsVoice.wav')
-          .getDownloadURL();
-      String userUrl = await _storage
-          .ref()
-          .child(widget.path)
-          .child('userVoice.wav')
-          .getDownloadURL();
-      setState(() {
-        resultDownloadURL = resultUrl;
-        ttsDownloadURL = ttsUrl;
-        userDownloadURL = userUrl;
-      });
-    } catch (e) {
-      debugPrint("다운로드 링크 오류: $e");
-    }
   }
 
   //파일 다운로드. json, tts, userVoice 파일 모두 다운 받는다
@@ -350,6 +317,11 @@ class ContentState extends State<ContentPage> {
             children: [
               //텍스트버튼을 만듦
               TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: () {
                   //피치 그래프 업데이트
                   _updateGraphData(userStart, userEnd, ttsStart, ttsEnd);
@@ -391,6 +363,7 @@ class ContentState extends State<ContentPage> {
                   ],
                 ),
               ),
+              SizedBox(height: 50),
             ],
           ),
         );

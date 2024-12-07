@@ -439,6 +439,16 @@ class SettingState extends State<SettingPage> {
                 textColor: Colors.white,
                 onTap: _showHighPitchDialog,
               ),
+              const SizedBox(height: 50),
+              CustomedButton(
+                  text: '로그아웃',
+                  buttonColor: Theme.of(context).primaryColor,
+                  textColor: Colors.white,
+                  onTap: () {
+                    if (mounted) {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    }
+                  }),
             ],
           ),
         ));

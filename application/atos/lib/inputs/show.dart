@@ -366,7 +366,7 @@ class ShowState extends State<ShowPage> {
               break;
             case -1:
               wordButtons.add(Transform.rotate(
-                  angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
+                  angle: 90 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
                   child: IconButton(
                       onPressed: () {
                         setState(() {
@@ -427,6 +427,11 @@ class ShowState extends State<ShowPage> {
             children: [
               //텍스트버튼을 만듦
               TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: () {
                   //피치 그래프 업데이트
                   twoGraphs = false;
@@ -456,10 +461,9 @@ class ShowState extends State<ShowPage> {
                 child: Text(word, style: const TextStyle(fontSize: 20)),
               ),
               SizedBox(
-                height: 10,
+                //height: 10,
                 width: 40,
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (pitchComparisons[i] == 1) arrows[0],
                     if (pitchComparisons[i] == -1) arrows[1],
@@ -468,6 +472,7 @@ class ShowState extends State<ShowPage> {
                   ],
                 ),
               ),
+              SizedBox(height: 50),
             ],
           ),
         );
@@ -599,9 +604,7 @@ class ShowState extends State<ShowPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         title: Text('분석 결과'),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
