@@ -14,12 +14,12 @@ from io import BytesIO
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
-from server.DTO.set_user_dto import UserDTO, SetRegionDTO
-from server.DTO.trans_text_dto import TransTextDTO, TransTextReDTO
-from server.DTO.get_tts_dto import GetTTSReqDTO, GetTTSAudioDTO
-from server.DTO.user_practice_dto import SavePracticeDTO, UpdatePracticeDTO
-from server.DTO.analysis_dto import AnalysisResult, VoiceAnalysisResponse, VoiceAnalysisResponse2
-from server.DTO.login_dto import LoginHistoryResDTO
+from server.DTO.set_user_dto import *
+from server.DTO.trans_text_dto import *
+from server.DTO.get_tts_dto import *
+from server.DTO.user_practice_dto import *
+from server.DTO.analysis_dto import *
+from server.DTO.login_dto import *
 
 from server.analysis import *
 
@@ -613,6 +613,27 @@ async def update_user_practice(request: UpdatePracticeDTO):
 
         for doc in user_practice_ref:
             userPractice_db.document(doc.id).update(user_practice_save_dto)
+
+        return True
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+    
+@app.delete("/delete-user-practice", description="사용자의 연습 데이터 삭제", tags=['Practice api'])
+async def delete_user_practice(request: DeletePracticeDTO):
+    try:
+        user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
+        data_path = user_practice_ref[0].to_dict().get('data_path')
+
+        for doc in user_practice_ref:
+            userPractice_db.document(doc.id).delete()
+
+        blob = bucket.blob(data_path + 'userVoice.wav')
+        blob2 = bucket.blob(data_path + 'ttsVoice.wav')
+        blob3 = bucket.blob(data_path + 'analysis.json')
+        blob.delete()
+        blob2.delete()
+        blob3.delete()
 
         return True
 
