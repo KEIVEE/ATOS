@@ -25,7 +25,16 @@ class SettingState extends State<SettingPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  final List<String> regions = ['경상도', '전라도', '충청도', '강원도', '제주도'];
+  final List<String> regions = [
+    '경상남도',
+    '경상북도',
+    '전라남도',
+    '전라북도',
+    '충청남도',
+    '충청북도',
+    '강원도',
+    '제주도',
+  ];
 
   String region = "";
 
