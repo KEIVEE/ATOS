@@ -4,15 +4,11 @@ import server.gctts as tts
 import server.tctts as tctts
 
 import firebase_admin
-from firebase_admin import firestore
-from firebase_admin import storage
+from firebase_admin import firestore, storage, auth, credentials
 
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Request, Depends
 from fastapi.responses import StreamingResponse, Response, JSONResponse
 from io import BytesIO
-
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
 
 from server.DTO.set_user_dto import *
 from server.DTO.trans_text_dto import *
@@ -85,12 +81,31 @@ todaySentence_db = db.collection('todaySentence')
 
 # app.add_middleware(LogMiddleware)
 
+def verify_token(request: Request):
+    id_token = request.headers.get('Authorization')
+    if not id_token:
+        raise HTTPException(status_code=402, detail="Missing id_token")
+
+    if id_token.startswith("Bearer "):
+        id_token = id_token.split(" ")[1]
+
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        email = decoded_token['email']
+        user_id = email.split('@')[0]
+        return user_id
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+
 @app.on_event("startup")
 async def startup_event():
     load_models() # 시작할 때 whisperx 모델 로드 후 저장
 
 @app.get('/login/{user_id}',description='로그인 기록 저장(로그인 후 호출하기)\n날짜별 하나만 저장 가능', tags=['User api'])
-async def login(user_id: str): 
+async def login(user_id: str, verified_user_id: str = Depends(verify_token)): 
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
+
     try:
         login_date = str(datetime.now().date())
         connection_save_dto = {
@@ -111,7 +126,9 @@ async def login(user_id: str):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.get('/get-login-history/{user_id}',description='로그인 기록 조회', tags=['User api'], response_model=LoginHistoryResDTO)
-async def get_login_history(user_id: str):
+async def get_login_history(user_id: str, verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid user_id")
     try:
         query = userConnection_db.where('user_id', '==', user_id).stream()
 
@@ -134,7 +151,9 @@ async def get_login_history(user_id: str):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.get('/get-green-graph/{user_id}',description='사용자의 일주일간 잔디심기 기록 리턴', tags=['User api'])
-async def get_green_graph(user_id: str):
+async def get_green_graph(user_id: str, verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         query = userConnection_db.where('user_id', '==', user_id).stream()
 
@@ -169,7 +188,9 @@ async def get_green_graph(user_id: str):
     
 
 @app.post('/set-user-region',description='사용자 지역 정보 변경', tags=['User api'])
-async def set_user_region(request: SetRegionDTO):
+async def set_user_region(request: SetRegionDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         user_ref = userData_db.document(request.user_id)
         user_ref.update({'region': request.region})
@@ -178,7 +199,9 @@ async def set_user_region(request: SetRegionDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/set-user',description='사용자 정보 저장', tags=['User api'])
-async def set_user(request: UserDTO):
+async def set_user(request: UserDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         user_save_dto = {
             'user_id': request.user_id,
@@ -195,7 +218,9 @@ async def set_user(request: UserDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.get('/get-user/{user_id}',description='사용자 정보 조회', tags=['User api'])
-async def get_user(user_id: str):
+async def get_user(user_id: str, verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         user = userData_db.document(user_id).get().to_dict()
 
@@ -208,7 +233,9 @@ async def get_user(user_id: str):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.post('/set-user-pitch',description='사용자 피치 저장', tags=['User api'])
-async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(...), user_id: str = Form(...)):
+async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(...), user_id: str = Form(...), verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         upload_dir = "server/pitch_audio"
         os.makedirs(upload_dir, exist_ok=True)
@@ -245,7 +272,9 @@ async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(..
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.post('/set-user-low-pitch',description='사용자 피치 저장', tags=['User api'])
-async def set_user_pitch(low: UploadFile = File(...), user_id: str = Form(...)):
+async def set_user_pitch(low: UploadFile = File(...), user_id: str = Form(...), verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         upload_dir = "server/pitch_audio"
         os.makedirs(upload_dir, exist_ok=True)
@@ -273,7 +302,9 @@ async def set_user_pitch(low: UploadFile = File(...), user_id: str = Form(...)):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/set-user-high-pitch',description='사용자 피치 저장', tags=['User api'])
-async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...)):
+async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...), verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         upload_dir = "server/pitch_audio"
         os.makedirs(upload_dir, exist_ok=True)
@@ -302,7 +333,9 @@ async def set_user_pitch(high: UploadFile = File(...), user_id: str = Form(...))
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/translate-text',response_model=TransTextReDTO,description='텍스트 번역 후 tts 파일 생성', tags=['TTS api']) 
-async def translate_text(request: TransTextDTO):
+async def translate_text(request: TransTextDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     # 텍스트 번역 후 테마에 맞추어 TTS 생성
     try:
         text_save_dto = {
@@ -356,7 +389,9 @@ async def translate_text(request: TransTextDTO):
                   "description": "음성 파일 경로를 반환합니다.",
                   "content": {"audio/wav": {}}
                   }}, tags=['TTS api'])
-async def get_tts(request: GetTTSReqDTO): 
+async def get_tts(request: GetTTSReqDTO, verified_user_id: str = Depends(verify_token)): 
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     # 텍스트 번역을 하지 않고 바로 TTS 생성
     try:
         trans_text_save_dto = {
@@ -391,7 +426,9 @@ async def get_tts(request: GetTTSReqDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.post('/get-tc-tts',description='타입캐스트 tts 생성', tags=['TTS api'])
-async def get_tc_tts(request: GetTTSReqDTO):
+async def get_tc_tts(request: GetTTSReqDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         trans_text_save_dto = {
             'user_id': request.user_id,
@@ -415,7 +452,7 @@ async def get_tc_tts(request: GetTTSReqDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.post("/get-tts-audio/", description="TTS 음성 파일 조회 (앱에서 쓸 필요 없음)", tags=['TTS api'])
-async def get_tts_audio(request: GetTTSAudioDTO):
+async def get_tts_audio(request: GetTTSAudioDTO, verified_user_id: str = Depends(verify_token)):
     try:
         blob = bucket.blob(request.audio_path)
         audio = blob.download_as_string()
@@ -434,7 +471,9 @@ async def get_tts_audio(request: GetTTSAudioDTO):
 
     
 @app.get("/get-user-practice/{user_id}", description="사용자의 연습 데이터 조회", tags=['Practice api'])
-async def get_user_practice(user_id : str) :
+async def get_user_practice(user_id : str, verified_user_id: str = Depends(verify_token)) :
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         query = userPractice_db.where("user_id", "==", user_id).stream()
 
@@ -454,7 +493,9 @@ async def get_user_practice(user_id : str) :
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.get("/get-user-practice-recent/{user_id}", description="사용자의 최근 연습 데이터 조회", tags=['Practice api'])
-async def get_user_practice_recent(user_id : str) :
+async def get_user_practice_recent(user_id : str, verified_user_id: str = Depends(verify_token)) :
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         query = userPractice_db.where("user_id", "==", user_id).stream()
 
@@ -473,7 +514,9 @@ async def get_user_practice_recent(user_id : str) :
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.get("/get-user-practice-num/{user_id}", description="사용자의 연습 데이터 개수 조회", tags=['Practice api'])
-async def get_user_practice_num(user_id : str) :
+async def get_user_practice_num(user_id : str, verified_user_id: str = Depends(verify_token)) :
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         query = userPractice_db.where("user_id", "==", user_id).stream()
 
@@ -484,7 +527,7 @@ async def get_user_practice_num(user_id : str) :
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.get("/get-user-practice-data/{data_path}", description="사용자의 연습 데이터 상세 조회. userVoice, ttsVoice, analysis를 압축한 zip파일 리턴", tags=['Practice api'])
-async def get_user_practice_data(data_path: str):
+async def get_user_practice_data(data_path: str, verified_user_id: str = Depends(verify_token)):
     # 사용자의 연습 기록을 반환 (플러터에서 ZIP 파일 해제에 문제가 있어 일단 보류)
     try:
         blob = bucket.blob(data_path + 'userVoice.wav')
@@ -508,7 +551,9 @@ async def get_user_practice_data(data_path: str):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.post("/save-user-practice", description="사용자의 연습 데이터 저장", tags=['Practice api'])
-async def save_user_practice(request: SavePracticeDTO):
+async def save_user_practice(request: SavePracticeDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     # Temp 디비에 있는 데이터들을 userPractice 디비로 이동 (정식적으로 저장)
     # Temp 디비에 있는 데이터 삭제는 안함
     try:
@@ -579,7 +624,9 @@ async def save_user_practice(request: SavePracticeDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post("/update-user-practice", description="사용자의 연습 데이터 수정", tags=['Practice api'])
-async def update_user_practice(request: UpdatePracticeDTO):
+async def update_user_practice(request: UpdatePracticeDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
         audio_db_collection = 'temp/' + str(request.temp_id) + '/'
@@ -620,7 +667,9 @@ async def update_user_practice(request: UpdatePracticeDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.delete("/delete-user-practice", description="사용자의 연습 데이터 삭제", tags=['Practice api'])
-async def delete_user_practice(request: DeletePracticeDTO):
+async def delete_user_practice(request: DeletePracticeDTO, verified_user_id: str = Depends(verify_token)):
+    if request.user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     try:
         user_practice_ref = userPractice_db.where('title', '==', request.title).where('user_id', '==', request.user_id).stream()
         data_path = user_practice_ref[0].to_dict().get('data_path')
@@ -641,7 +690,7 @@ async def delete_user_practice(request: DeletePracticeDTO):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.get("/get-analysis-data/{data_path}", description="temp에서 사용자의 분석 데이터 return. 분석 결과를 json 파일로 리턴", tags=['Analysis api'])
-async def get_analysis_data(data_path: str):
+async def get_analysis_data(data_path: str, verified_user_id: str = Depends(verify_token)):
     try:
         
         blob3 = bucket.blob('temp/' + data_path + '/analysis.json')
@@ -654,7 +703,9 @@ async def get_analysis_data(data_path: str):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post("/voice-analysis",description="음성 분석\n사용자음성, tts음성, 텍스트를 받아 분석 후 결과 반환", tags=['Analysis api'], response_model=VoiceAnalysisResponse2)
-async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...)):
+async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFile = File(...), text: str = Form(...), user_id: str = Form(...), verified_user_id: str = Depends(verify_token)):
+    if user_id != verified_user_id:
+        raise HTTPException(status_code=401, detail="Invalid Token")
     # 사용자 음성, TTS 음성, 분석 결과는 Temp(임시 디비)에 저장됨
     # 나중에 사용자가 저장한다고 하면 Temp -> userPractice로 데이터 이동
     # 첫 음성 파일이 있다면 저장하지 않도록 하는 기능도 추가하기 (아니면 api 새로 만들어도 될듯)
