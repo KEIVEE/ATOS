@@ -813,6 +813,20 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         os.remove(user_voice_path)
         os.remove(tts_voice_path)
 
+        combined_pitch_values = pitch_values.tolist() + pitch_values_tts.tolist()
+
+        non_zero_pitch_values = [value for value in combined_pitch_values if value != 0]
+
+        # 가장 큰 값과 0이 아닌 값 중에서 가장 작은 값 찾기
+        max_pitch_value = max(non_zero_pitch_values)
+        min_pitch_value = min(non_zero_pitch_values)
+
+        combined_amp_values = filtered_data.tolist() + tts_data.tolist()
+
+        # 가장 큰 값과 가장 작은 값 찾기
+        max_amp_value = max(combined_amp_values)
+        min_amp_value = min(combined_amp_values)
+
         result = {
             'word_intervals': word_intervals,
             'tts_word_intervals': tts_word_intervals,
@@ -829,7 +843,11 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             'time_steps': time_steps.tolist(),
             'pitch_values_tts': pitch_values_tts.tolist(),
             'time_steps_tts': time_steps_tts.tolist(),
-            'results': results
+            'results': results,
+            'max_pitch': max_pitch_value,
+            'min_pitch': min_pitch_value,
+            'max_amp': max_amp_value,
+            'min_amp': min_amp_value
         }
 
         # gzip이 효율이 좋지만 압축 해제에서 문제가 생겨 일단 json으로 저장
