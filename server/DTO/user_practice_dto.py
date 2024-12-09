@@ -13,3 +13,7 @@ class UpdatePracticeDTO(BaseModel):
     temp_id: str
     changed_title: Optional[str]
 
+class DeletePracticeDTO(BaseModel):
+    user_id: str
+    title: str
+

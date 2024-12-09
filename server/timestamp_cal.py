@@ -28,7 +28,7 @@ def ts_cal (text_ts, ori_text):
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant that formats timestamp data to match original text. Please make sure the timestamps match the original text and correct any spacing issues. Also Punctuation Marks. The timestamps should be in the same format as the JSON I provided, with items containing the names 'word', 'start', and 'end'. Response only the timestamps in JSON format."
+                    "content": "You are a helpful assistant that formats timestamp data to match the original text. The original text is the reference, and the timestamps must align precisely with it. Please make sure the timestamps match the original text and correct any spacing and punctuation issues. The timestamps should be in the same format as the JSON I provided, with items containing the names 'word', 'start', and 'end'. Response only the timestamps in JSON format."
                 },
                 {
                     "role": "user", 
