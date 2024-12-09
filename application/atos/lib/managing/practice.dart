@@ -28,7 +28,8 @@ class PracticeState extends State<PracticePage> {
   //자기 id로 된 목록을 가져옴
   Future<List<dynamic>> _fetchData() async {
     final response = await http.get(
-        Uri.parse('${ControlUri.BASE_URL}/get-user-practice/${widget.id}'));
+        Uri.parse('${ControlUri.BASE_URL}/get-user-practice/${widget.id}'),
+        headers: ControlUri.headerUtf8);
 
     if (response.statusCode == 200) {
       return jsonDecode(utf8.decode(response.bodyBytes));

@@ -73,7 +73,7 @@ class TranslatingState extends State<TranslatingPage> {
             'theme': widget.theme,
             'sex': sex,
           }),
-          headers: {'Content-Type': 'application/json'},
+          headers: ControlUri.headers,
         );
 
         if (response.statusCode == 200) {
@@ -113,7 +113,7 @@ class TranslatingState extends State<TranslatingPage> {
             'theme': widget.theme,
             'sex': sex,
           }),
-          headers: {'Content-Type': 'application/json'},
+          headers: ControlUri.headers,
         );
 
         if (response.statusCode == 200) {

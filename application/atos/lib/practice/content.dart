@@ -59,6 +59,10 @@ class ContentState extends State<ContentPage> {
   int userSamplingRate = 0;
   int ttsSamplingRate = 0;
 
+  double maxPitch = 0;
+  double minPitch = 0;
+  int maxAmp = 0;
+
   //선택된 단어의 시작점과 끝점, 담을 메시지
   double currentuserStart = 0.0;
   double currentuserEnd = 0.0;
@@ -148,6 +152,9 @@ class ContentState extends State<ContentPage> {
               []; // If null, assign an empty list
           userSamplingRate = data['sampling_rate'] as int? ?? 0;
           ttsSamplingRate = data['tts_sampling_rate'] as int? ?? 0;
+          maxPitch = (data['max_pitch'] as num?)?.toDouble() ?? 0;
+          minPitch = (data['min_pitch'] as num?)?.toDouble() ?? 0;
+          maxAmp = (data['max_amp'] as num?)?.toInt() ?? 0;
           results = (data['results'] as List<dynamic>?)
                   ?.map((e) => (e as num).toInt())
                   .toList() ??
@@ -540,6 +547,9 @@ class ContentState extends State<ContentPage> {
                                 previousTtsStart: previousTtsStart,
                                 previousUserEnd: previousUserEnd,
                                 previousUserStart: previousUserStart,
+                                maxPitch: maxPitch,
+                                minPitch: minPitch,
+                                maxAmp: maxAmp,
                               )
                             : GraphPage(
                                 userGraphData: userGraphData,
@@ -555,6 +565,9 @@ class ContentState extends State<ContentPage> {
                                 pitchFeedback: currentPitchComparison,
                                 amplitudeFeedback: currentAmplitudeComparison,
                                 previousPitchFeedback: currentResults,
+                                maxPitch: maxPitch,
+                                minPitch: minPitch,
+                                maxAmp: maxAmp,
                               ),
                   ),
                   Wrap(

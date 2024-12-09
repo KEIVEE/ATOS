@@ -60,6 +60,11 @@ class ShowState extends State<ShowPage> {
   int userSamplingRate = 0;
   int ttsSamplingRate = 0;
 
+  double maxPitch = 0;
+  double minPitch = 0;
+
+  int maxAmp = 0;
+
   //선택된 단어의 시작점과 끝점, 담을 메시지
   double currentuserStart = 0.0;
   double currentuserEnd = 0.0;
@@ -83,11 +88,6 @@ class ShowState extends State<ShowPage> {
   ];
   //final AudioPlayer _audioPlayer = AudioPlayer();
   var title = ''; //연습을 저장할 거라면 연습 제목이 필요함
-
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
 
   //Map<String, dynamic> jsonData = {}; //분석 결과
 
@@ -184,7 +184,7 @@ class ShowState extends State<ShowPage> {
       //제목이 있으면 저장api 호출
       final response = await http.post(
         Uri.parse('${ControlUri.BASE_URL}/save-user-practice'),
-        headers: headers,
+        headers: ControlUri.headerAccept,
         body: jsonEncode(
           {
             "user_id": widget.id,
@@ -219,7 +219,7 @@ class ShowState extends State<ShowPage> {
       // HTTP GET 요청으로 JSON 데이터 다운로드
       final response = await http.get(
         Uri.parse('${ControlUri.BASE_URL}/get-analysis-data/${widget.result}'),
-        headers: headers,
+        headers: ControlUri.headerAccept,
       );
 
       if (response.statusCode == 200) {
@@ -267,6 +267,9 @@ class ShowState extends State<ShowPage> {
             []; // If null, assign an empty list
         userSamplingRate = data['sampling_rate'] as int? ?? 0;
         ttsSamplingRate = data['tts_sampling_rate'] as int? ?? 0;
+        maxPitch = (data['max_pitch'] as num?)?.toDouble() ?? 0;
+        minPitch = (data['min_pitch'] as num?)?.toDouble() ?? 0;
+        maxAmp = (data['max_amp'] as num?)?.toInt() ?? 0;
         results = (data['results'] as List<dynamic>?)
                 ?.map((e) => (e as num).toInt())
                 .toList() ??
@@ -652,6 +655,9 @@ class ShowState extends State<ShowPage> {
                                 previousTtsStart: previousTtsStart,
                                 previousUserEnd: previousUserEnd,
                                 previousUserStart: previousUserStart,
+                                maxAmp: maxAmp,
+                                maxPitch: maxPitch,
+                                minPitch: minPitch,
                               )
                             : GraphPage(
                                 userGraphData: userGraphData,
@@ -667,6 +673,9 @@ class ShowState extends State<ShowPage> {
                                 pitchFeedback: currentPitchComparison,
                                 amplitudeFeedback: currentAmplitudeComparison,
                                 previousPitchFeedback: currentResults,
+                                maxAmp: maxAmp,
+                                maxPitch: maxPitch,
+                                minPitch: minPitch,
                               ),
                   ),
                   Wrap(

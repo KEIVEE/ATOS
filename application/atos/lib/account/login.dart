@@ -22,6 +22,17 @@ class LoginState extends State<LoginPage> {
   var loginTried = false; // 로그인 시도 여부
   var loginFailed = false; // 로그인 실패 여부
 
+  Future<void> getToken() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      ControlUri.TOKEN = await user.getIdToken();
+      debugPrint('JWT Token: ${ControlUri.TOKEN}');
+    } else {
+      //print('User is not logged in.');
+    }
+  }
+
 //로그인 버튼을 눌렀을 때
   Future<void> signInWithEmailAndPassword() async {
     try {
@@ -31,12 +42,12 @@ class LoginState extends State<LoginPage> {
         password: password,
       );
 
+      await getToken();
+
       //로그인 api: 로그인 기록 남기기.
       http.get(
         Uri.parse('${ControlUri.BASE_URL}/login/$id'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
+        headers: ControlUri.headerUtf8,
       );
 
       //로그인 성공 시 로그인 실패 메시지 제거

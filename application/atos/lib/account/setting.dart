@@ -74,7 +74,7 @@ class SettingState extends State<SettingPage> {
     if (user != null) {
       final response = await http.post(
         Uri.parse('${ControlUri.BASE_URL}/set-user-region'),
-        headers: {'Content-Type': 'application/json'},
+        headers: ControlUri.headers,
         body: json.encode({
           'user_id': widget.id,
           'region': newRegion,
@@ -187,6 +187,8 @@ class SettingState extends State<SettingPage> {
       Uri.parse('${ControlUri.BASE_URL}/set-user-low-pitch'), // 저음 전송 URL
     );
 
+    request.headers['Authorization'] = 'Bearer ${ControlUri.TOKEN}';
+
     request.files.add(await http.MultipartFile.fromPath('low', _lowPitchPath));
     request.fields['user_id'] = widget.id;
 
@@ -210,6 +212,8 @@ class SettingState extends State<SettingPage> {
       'POST',
       Uri.parse('${ControlUri.BASE_URL}/set-user-high-pitch'), // 고음 전송 URL
     );
+
+    request.headers['Authorization'] = 'Bearer ${ControlUri.TOKEN}';
 
     request.files
         .add(await http.MultipartFile.fromPath('high', _highPitchPath));
@@ -453,8 +457,13 @@ class SettingState extends State<SettingPage> {
                   text: '로그아웃',
                   buttonColor: Theme.of(context).primaryColor,
                   textColor: Colors.white,
-                  onTap: () {
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    setState(() {
+                      ControlUri.TOKEN = '';
+                    });
                     if (mounted) {
+                      // ignore: use_build_context_synchronously
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     }
                   }),

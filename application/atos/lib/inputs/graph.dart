@@ -20,6 +20,9 @@ class GraphPage extends StatefulWidget {
   final int pitchFeedback; //피치 피드백
   final int amplitudeFeedback; //진폭 피드백
   final int previousPitchFeedback; //이전 단어 피치 피드백
+  final double maxPitch; //최대 pitch 값
+  final double minPitch; //최소 pitch 값
+  final int maxAmp; //최대 amplitude 값
   final double? previousUserStart; //이전 단어 사용자 타임스탬프 시작점
   final double? previousUserEnd; //이전 단어 사용자 타임스탬프 끝점
   final double? previousTtsStart; //이전 단어 표준어 타임스탬프 시작점
@@ -46,6 +49,9 @@ class GraphPage extends StatefulWidget {
     required this.pitchFeedback,
     required this.amplitudeFeedback,
     required this.previousPitchFeedback,
+    required this.maxPitch,
+    required this.minPitch,
+    required this.maxAmp,
     this.previousUserStart,
     this.previousUserEnd,
     this.previousTtsStart,
@@ -179,6 +185,7 @@ class GraphState extends State<GraphPage> {
                 child: Text("표준어 들어보기"),
               ),
               SizedBox(width: 16),
+              //Text(widget.minPitch.toString()),
               // 내 목소리 들어보기 버튼
               ElevatedButton(
                 onPressed: () {
@@ -348,6 +355,8 @@ class GraphState extends State<GraphPage> {
           gridData: FlGridData(show: true),
           titlesData: FlTitlesData(show: false),
           borderData: FlBorderData(show: true),
+          maxY: widget.maxPitch + 10,
+          minY: widget.minPitch - 10,
           lineBarsData: [
             userPitchGraph,
             if (previousTtsPitchGraph != null) previousTtsPitchGraph!,
@@ -362,8 +371,8 @@ class GraphState extends State<GraphPage> {
           titlesData: FlTitlesData(show: false),
           borderData: FlBorderData(show: true),
           // y = 0이 중앙에 오도록 설정
-          maxY: 20000,
-          minY: -20000,
+          maxY: widget.maxAmp.toDouble() + 100,
+          minY: -widget.maxAmp.toDouble() - 100,
           lineBarsData: [
             userAmplitudeGraph,
             ttsAmplitudeGraph,
