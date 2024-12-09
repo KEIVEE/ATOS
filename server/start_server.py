@@ -690,7 +690,7 @@ async def delete_user_practice(request: DeletePracticeDTO, verified_user_id: str
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.get("/get-analysis-data/{data_path}", description="temp에서 사용자의 분석 데이터 return. 분석 결과를 json 파일로 리턴", tags=['Analysis api'])
-async def get_analysis_data(data_path: str, verified_user_id: str = Depends(verify_token)):
+async def get_analysis_data(data_path: str):
     try:
         
         blob3 = bucket.blob('temp/' + data_path + '/analysis.json')
