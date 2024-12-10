@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:atos/inputs/show.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -32,11 +34,15 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
+  var youKnowWhat = '';
+
   Future<void> _processRequest() async {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${ControlUri.BASE_URL}/voice-analysis'),
     );
+
+    request.headers['Authorization'] = 'Bearer ${ControlUri.TOKEN}';
 
     // 멀티파트 요청에 필요한 파일
     request.files.add(
@@ -86,8 +92,18 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
 
   @override
   void initState() {
-    super.initState();
+    int youKnowWhatNumber = Random().nextInt(3);
+    if (youKnowWhatNumber == 0) {
+      youKnowWhat =
+          '방언은 오방지언이라는 단어에서 유래되었어요. \n여기서 오방은 동방, 서방, 남방, 북방, 중방을 합친 말로, \n오방지언은 “각 지방의 말” 이라는 뜻이에요.';
+    } else if (youKnowWhatNumber == 1) {
+      youKnowWhat = '“저번주”는 강원도, 충청남도의 사투리로 \n“지난주”가 표준어입니다.';
+    } else if (youKnowWhatNumber == 2) {
+      youKnowWhat =
+          '데덴찌(서울), 젠~디(부산), \n뺀다뺀다 또뺀다(대구), \n편뽑기 편뽑기 알코르세요(광주)는 \n모두 손바닥으로 편을 가르는 말입니다.';
+    }
     _fetchFileAndProcessRequest();
+    super.initState();
   }
 
   @override
@@ -96,18 +112,29 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
       onWillPop: () async {
         return false; // 뒤로 가기 동작 비활성화
       },
-      child: const Scaffold(
+      child: Scaffold(
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text('분석중이에요'),
+              SizedBox(height: 10),
               SizedBox(
                 width: 100,
                 height: 100,
                 child: CircularProgressIndicator(
                   strokeWidth: 10,
                 ),
+              ),
+              SizedBox(height: 10),
+              Text('그거 아시나요?',
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold)),
+              Text(
+                youKnowWhat,
+                style: TextStyle(fontSize: 12),
               ),
             ],
           ),

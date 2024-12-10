@@ -37,7 +37,7 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
   //권한 요청하고 녹음기 초기화
   Future<void> _initRecorder() async {
     var status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
+    if (status != PermissionStatus.granted && mounted) {
       // 권한 거부 처리
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('마이크 권한이 필요합니다.')),
@@ -89,6 +89,8 @@ class _VoiceRegisterPageState extends State<VoiceRegisterPage> {
       'POST',
       Uri.parse('${ControlUri.BASE_URL}/set-user-pitch'),
     );
+
+    request.headers['Authorization'] = 'Bearer ${ControlUri.TOKEN}';
 
     //멀티파트 전송
     request.files.add(await http.MultipartFile.fromPath('low', _lowPitchPath));

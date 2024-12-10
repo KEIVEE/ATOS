@@ -55,8 +55,9 @@ class HomeState extends State<HomePage> {
   }
 
   Future<void> getReccomendation() async {
-    http.Response response =
-        await http.post(Uri.parse('${ControlUri.BASE_URL}/get-today-sentence'));
+    http.Response response = await http.post(
+        Uri.parse('${ControlUri.BASE_URL}/get-today-sentence'),
+        headers: ControlUri.headerUtf8);
 
     if (response.statusCode == 200) {
       final String decodedBody = utf8.decode(response.bodyBytes);
@@ -74,7 +75,10 @@ class HomeState extends State<HomePage> {
 
   Future<void> getGrass() async {
     http.Response response = await http.get(
-      Uri.parse('${ControlUri.BASE_URL}/get-green-graph/${widget.id}'),
+      Uri.parse(
+        '${ControlUri.BASE_URL}/get-green-graph/${widget.id}',
+      ),
+      headers: ControlUri.headers,
     );
 
     if (response.statusCode == 200) {
@@ -89,8 +93,9 @@ class HomeState extends State<HomePage> {
 
   Future<void> getRecent() async {
     http.Response response = await http.get(
-      Uri.parse('${ControlUri.BASE_URL}/get-user-practice-recent/${widget.id}'),
-    );
+        Uri.parse(
+            '${ControlUri.BASE_URL}/get-user-practice-recent/${widget.id}'),
+        headers: ControlUri.headerUtf8);
 
     if (response.statusCode == 200) {
       final String decodedBody = utf8.decode(response.bodyBytes);
@@ -154,7 +159,7 @@ class HomeState extends State<HomePage> {
                 ),
               ),
               // 추천 문장
-              const Text('오늘의 추천 문장:', style: TextStyle(color: Colors.white)),
+              const Text('오늘의 문장', style: TextStyle(color: Colors.white)),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Text(

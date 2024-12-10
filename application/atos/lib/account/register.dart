@@ -38,10 +38,6 @@ class RegisterState extends State<RegisterPage> {
   ]; // 지역 목록
   String selectedGender = "남성"; // 성별을 저장할 변수 (기본값: 남성)
 
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-  };
-
   var region = ""; // 지역
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -111,7 +107,7 @@ class RegisterState extends State<RegisterPage> {
           Uri.parse('${ControlUri.BASE_URL}/set-user'),
           body: json
               .encode({'user_id': id, 'region': region, 'sex': selectedGender}),
-          headers: headers);
+          headers: ControlUri.headers);
 
       if (response.statusCode != 200) {
         debugPrint("회원가입 오류.");
