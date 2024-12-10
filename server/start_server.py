@@ -781,8 +781,6 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
             word_intervals = future_word_intervals.result()
             tts_word_intervals = future_tts_word_intervals.result()
 
-        
-
         # 음성 분석 => 멀티 스레딩으로 처리
         with ThreadPoolExecutor() as executor:
             future_amp_result = executor.submit(compare_amplitude_differences, word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate)
