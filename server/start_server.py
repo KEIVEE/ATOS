@@ -773,7 +773,7 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         word_intervals = cal_timestamp(extract_word_timestamps(user_voice_path))
         tts_word_intervals = extract_word_timestamps(tts_voice_path)
 
-        # TTS, 사용자 타임스탬프 보정
+        # TTS, 사용자 타임스탬프 보정 => 멀티 스레딩으로 처리
         with ThreadPoolExecutor() as executor:
             future_word_intervals = executor.submit(ts_cal, word_intervals, text)
             future_tts_word_intervals = executor.submit(ts_cal, tts_word_intervals, text)
@@ -783,13 +783,12 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
 
         
 
-        # 멀티스레딩을 사용하여 세 가지 작업을 병렬로 수행
+        # 음성 분석 => 멀티 스레딩으로 처리
         with ThreadPoolExecutor() as executor:
             future_amp_result = executor.submit(compare_amplitude_differences, word_intervals, tts_word_intervals, filtered_data, tts_data, tts_sampling_rate, sampling_rate)
             future_pitch_result = executor.submit(calculate_pitch_differences, word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts)
             future_segments_result = executor.submit(compare_pitch_differences, word_intervals, pitch_values, tts_word_intervals, pitch_values_tts, time_steps, time_steps_tts)
 
-            # 결과를 기다림
             comp_amp_result, max_word = future_amp_result.result()
             comp_pitch_result = future_pitch_result.result()
             results = future_segments_result.result()
