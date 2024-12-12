@@ -83,6 +83,11 @@ class InputAnalyzingState extends State<InputAnalyzingPage> {
       }
     } catch (e) {
       debugPrint("HTTP 요청 오류: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('음성을 제대로 인식하지 못했어요.')));
+        Navigator.of(context).pop();
+      }
     }
   }
 
