@@ -1,6 +1,6 @@
 import numpy as np
 
-def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts, threshold=25):
+def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values, time_steps, pitch_values_tts, time_steps_tts, threshold=30):
     """
     사용자와 TTS 단어의 피치 차이를 계산하고 결과를 반환하는 함수.
 
@@ -45,9 +45,9 @@ def calculate_pitch_differences(word_intervals, tts_word_intervals, pitch_values
                 tts_pitch_min = np.min(tts_pitch_samples)
                 tts_pitch_diff = tts_pitch_max - tts_pitch_min
                 tts_max_time = tts_time_samples[np.argmax(tts_pitch_samples)]  # 최대 피치에 해당하는 시간
-                if user_pitch_diff - tts_pitch_diff > threshold:
+                if user_pitch_diff - tts_pitch_diff > threshold-10:
                     result.append(1)
-                elif tts_pitch_diff - user_pitch_diff > threshold:
+                elif tts_pitch_diff - user_pitch_diff > threshold+10:
                     result.append(-1)
                 else:
                     result.append(0)
