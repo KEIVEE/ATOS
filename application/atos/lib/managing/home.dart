@@ -106,7 +106,7 @@ class HomeState extends State<HomePage> {
         recentDate = data['date'];
         first = false;
       });
-    } else if (response.statusCode == 404) {
+    } else if (response.statusCode == 204) {
       setState(() {
         first = true;
       });

@@ -159,6 +159,7 @@ class ContentState extends State<ContentPage> {
                   ?.map((e) => (e as num).toInt())
                   .toList() ??
               []; // If null, assign an empty list
+          debugPrint(results.toString());
           pitchComparisons = (data['comp_pitch_result'] as List<dynamic>?)
                   ?.map((e) => (e as num).toInt())
                   .toList() ??
@@ -267,7 +268,7 @@ class ContentState extends State<ContentPage> {
               break;
             case -1:
               wordButtons.add(Transform.rotate(
-                  angle: -45 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
+                  angle: 90 * 3.1415927 / 180, // 45도 회전 (라디안 단위)
                   child: IconButton(
                       onPressed: () {
                         setState(() {
@@ -298,7 +299,7 @@ class ContentState extends State<ContentPage> {
                           currentPitchComparison = 0;
                           currentAmplitudeComparison = 0;
 
-                          currentResults = results[i];
+                          currentResults = results[i - 1];
                         });
                         _updatePreviousGraphData(
                             previousUserStart,

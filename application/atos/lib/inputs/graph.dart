@@ -185,7 +185,7 @@ class GraphState extends State<GraphPage> {
                 child: Text("표준어 들어보기"),
               ),
               SizedBox(width: 16),
-              //Text(widget.minPitch.toString()),
+              //Text(widget.maxPitch.toString()),
               // 내 목소리 들어보기 버튼
               ElevatedButton(
                 onPressed: () {
@@ -298,8 +298,7 @@ class GraphState extends State<GraphPage> {
               ],
             ),
           ),
-
-          //Text(widget.userAudioPath),
+          Text(widget.previousPitchFeedback.toString()),
         ],
       ),
       bottomNavigationBar: Theme(
