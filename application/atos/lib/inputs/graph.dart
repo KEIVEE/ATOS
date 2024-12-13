@@ -298,7 +298,7 @@ class GraphState extends State<GraphPage> {
               ],
             ),
           ),
-          Text(widget.previousPitchFeedback.toString()),
+          //Text(widget.previousPitchFeedback.toString()),
         ],
       ),
       bottomNavigationBar: Theme(
