@@ -6,9 +6,13 @@ from server.settings import TC_TTS_KEY, TC_TTS_KEY2, TC_TTS_KEY3
 
 def getTCTTS(text, theme=2):
 
+    tempo = 1
+    pitch = 0
+
     selected_key = ''
     if theme == 1:
         selected_key = TC_TTS_KEY
+        tempo = 0.9
     elif theme == 2:
         selected_key = TC_TTS_KEY2
     elif theme == 3:
@@ -28,10 +32,10 @@ def getTCTTS(text, theme=2):
         'actor_id': actor_id, 
         'text': text, 
         'lang': 'auto', 
-        'tempo': 1, 
-        'volume': 100, 
+        'tempo': tempo, 
+        'volume': 40, 
         'pitch': 0, 
-        'xapi_hd': True, 
+        'xapi_hd': False, 
         'model_version': 'latest', 
         'xapi_audio_format': 'wav'
         })

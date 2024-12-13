@@ -199,9 +199,7 @@ async def set_user_region(request: SetRegionDTO, verified_user_id: str = Depends
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @app.post('/set-user',description='사용자 정보 저장', tags=['User api'])
-async def set_user(request: UserDTO, verified_user_id: str = Depends(verify_token)):
-    if request.user_id != verified_user_id:
-        raise HTTPException(status_code=401, detail="Invalid Token")
+async def set_user(request: UserDTO):
     try:
         user_save_dto = {
             'user_id': request.user_id,
@@ -233,9 +231,7 @@ async def get_user(user_id: str, verified_user_id: str = Depends(verify_token)):
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
     
 @app.post('/set-user-pitch',description='사용자 피치 저장', tags=['User api'])
-async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(...), user_id: str = Form(...), verified_user_id: str = Depends(verify_token)):
-    if user_id != verified_user_id:
-        raise HTTPException(status_code=401, detail="Invalid Token")
+async def set_user_pitch(low: UploadFile = File(...), high: UploadFile = File(...), user_id: str = Form(...)):
     try:
         upload_dir = "server/pitch_audio"
         os.makedirs(upload_dir, exist_ok=True)
@@ -505,7 +501,7 @@ async def get_user_practice_recent(user_id : str, verified_user_id: str = Depend
             practices.append({**doc.to_dict(), 'doc_id': doc.id})
 
         if not practices:
-            return Response(status_code=204, content="연습 데이터가 없습니다.")
+            return Response(status_code=204)
         
         practices.sort(key=lambda x: datetime.strptime(x['detail_date'], "%Y-%m-%d %H:%M:%S.%f"), reverse=True)
         return practices[0]
@@ -807,8 +803,12 @@ async def voice_analysis(user_voice: UploadFile = File(...), tts_voice: UploadFi
         # results = compare_pitch_differences(word_intervals, pitch_values, tts_word_intervals, pitch_values_tts,time_steps,time_steps_tts, threshold=20)
      
         # 로컬 파일 삭제
-        os.remove(user_voice_path)
-        os.remove(tts_voice_path)
+        #os.remove(user_voice_path)
+        #os.remove(tts_voice_path)
+
+        print('=====================')
+        print(max(pitch_values))
+        print(max(pitch_values_tts))
 
         combined_pitch_values = pitch_values.tolist() + pitch_values_tts.tolist()
 
